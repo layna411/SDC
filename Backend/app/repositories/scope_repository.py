@@ -83,5 +83,11 @@ def scope_feedback_query(query: Query, user: User) -> Query:
 
 
 def scope_activities_query(query: Query, user: User) -> Query:
-    """Strictly scope activity history to the currently authenticated user only."""
+    """Scope activity history according to role hierarchy."""
+    if user.role == UserRole.SUPER_ADMIN:
+        return query
+    if user.role == UserRole.COLLEGE_ADMIN:
+        return query.filter(ActivityLog.college_id == user.college_id)
+    if user.role == UserRole.CENTER_ADMIN:
+        return query.filter(ActivityLog.center_id == user.center_id)
     return query.filter(ActivityLog.user_id == user.id)

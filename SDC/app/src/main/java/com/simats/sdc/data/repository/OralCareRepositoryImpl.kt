@@ -844,8 +844,22 @@ class OralCareRepositoryImpl @Inject constructor(
             is RepoResult.Error -> res
         }
 
-    override suspend fun listActivities(action: String?): RepoResult<List<ActivityLogDto>> =
-        safeCall { api.listActivities(action?.takeIf { it.isNotBlank() }) }
+    override suspend fun listActivities(
+        action: String?,
+        userId: Int?,
+        collegeId: Int?,
+        centerId: Int?,
+        limit: Int,
+    ): RepoResult<List<ActivityLogDto>> =
+        safeCall {
+            api.listActivities(
+                action = action?.takeIf { it.isNotBlank() },
+                userId = userId,
+                collegeId = collegeId,
+                centerId = centerId,
+                limit = limit,
+            )
+        }
 
     override suspend fun listSettings(): RepoResult<List<AppSettingDto>> = safeCall { api.listSettings() }
 

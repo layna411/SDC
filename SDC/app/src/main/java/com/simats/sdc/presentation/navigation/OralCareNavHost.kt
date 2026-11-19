@@ -168,9 +168,12 @@ private fun AuthenticatedRoleShell(
     val savedDrafts by screeningViewModel.savedDrafts.collectAsState()
 
     LaunchedEffect(session.userId, role) {
+        dashboardViewModel.reset()
+        patientsViewModel.reset()
         activityViewModel.reset()
         reportsViewModel.reset()
         dashboardViewModel.loadDashboardForRole(role)
+        patientsViewModel.loadPatients()
     }
 
     BackHandler(enabled = overlayRoute != null || selectedTab != "home") {
@@ -297,6 +300,7 @@ private fun AuthenticatedRoleShell(
                             onDismissBanner = dashboardViewModel::clearCredentialBanner,
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
+                            onFetchCollegeActivities = dashboardViewModel::getActivitiesForCollege,
                         )
                         "centers" -> CentersManagementScreen(
                             role = role,
@@ -307,6 +311,7 @@ private fun AuthenticatedRoleShell(
                             onDismissBanner = dashboardViewModel::clearCredentialBanner,
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
+                            onFetchCenterActivities = dashboardViewModel::getActivitiesForCenter,
                         )
                         "organizers" -> OrganizersManagementScreen(
                             role = role,
@@ -316,6 +321,7 @@ private fun AuthenticatedRoleShell(
                             onDismissBanner = dashboardViewModel::clearCredentialBanner,
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
+                            onFetchUserActivities = dashboardViewModel::getActivitiesForUser,
                         )
                         "users" -> UsersDirectoryScreen(
                             uiState = dashboardState,
@@ -325,6 +331,7 @@ private fun AuthenticatedRoleShell(
                             onDismissBanner = dashboardViewModel::clearCredentialBanner,
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
+                            onFetchUserActivities = dashboardViewModel::getActivitiesForUser,
                         )
                         "screenings" -> ScreeningsMonitorScreen(
                             uiState = dashboardState,

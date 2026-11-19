@@ -64,6 +64,15 @@ data class UserStatusUpdateDto(
     @SerializedName("is_active") val isActive: Boolean,
 )
 
+data class IssuedCredentialsDto(
+    val title: String,
+    @SerializedName("entity_name") val entityName: String? = null,
+    val username: String,
+    @SerializedName("user_uid") val userUid: String? = null,
+    @SerializedName("temporary_password") val temporaryPassword: String,
+    val role: String? = null,
+)
+
 // --- Organization Hierarchy ---
 data class CollegeCreateDto(
     @SerializedName("college_code") val collegeCode: String,
@@ -544,11 +553,14 @@ data class MonthlyOverviewDto(
 data class ActivityLogDto(
     val id: Int,
     @SerializedName("user_id") val userId: Int? = null,
+    val username: String? = null,
+    @SerializedName("user_full_name") val userFullName: String? = null,
     val role: String,
     val action: String,
     @SerializedName("entity_type") val entityType: String,
     @SerializedName("entity_id") val entityId: String? = null,
     @SerializedName("ip_address") val ipAddress: String? = null,
+    val details: Any? = null,
     @SerializedName("created_at") val createdAt: String,
 )
 

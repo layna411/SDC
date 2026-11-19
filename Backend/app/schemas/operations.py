@@ -118,6 +118,8 @@ class ActivityLogResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     user_id: Optional[int] = None
+    username: Optional[str] = None
+    user_full_name: Optional[str] = None
     role: str
     college_id: Optional[int] = None
     center_id: Optional[int] = None

@@ -99,7 +99,13 @@ interface OralCareRepository {
     suspend fun deleteAwarenessContent(id: Int): RepoResult<Unit>
 
     // Activities & Settings
-    suspend fun listActivities(action: String? = null): RepoResult<List<ActivityLogDto>>
+    suspend fun listActivities(
+        action: String? = null,
+        userId: Int? = null,
+        collegeId: Int? = null,
+        centerId: Int? = null,
+        limit: Int = 80,
+    ): RepoResult<List<ActivityLogDto>>
     suspend fun listSettings(): RepoResult<List<AppSettingDto>>
     suspend fun upsertSetting(req: AppSettingUpsertDto): RepoResult<AppSettingDto>
 }

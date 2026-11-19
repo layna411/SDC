@@ -201,6 +201,9 @@ interface OralCareApiService {
     @GET("activities")
     suspend fun listActivities(
         @Query("action") action: String? = null,
+        @Query("user_id") userId: Int? = null,
+        @Query("college_id") collegeId: Int? = null,
+        @Query("center_id") centerId: Int? = null,
         @Query("limit") limit: Int = 80,
     ): Response<List<ActivityLogDto>>
 

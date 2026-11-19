@@ -63,6 +63,10 @@ class PatientsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PatientsUiState())
     val uiState: StateFlow<PatientsUiState> = _uiState.asStateFlow()
 
+    fun reset() {
+        _uiState.value = PatientsUiState(isLoading = true)
+    }
+
     init {
         viewModelScope.launch {
             sessionManager.sessionFlow.collect { session ->

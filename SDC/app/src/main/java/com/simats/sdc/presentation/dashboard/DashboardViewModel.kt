@@ -23,6 +23,7 @@ data class DashboardUiState(
     val awareness: List<AwarenessContentDto> = emptyList(),
     val settings: List<AppSettingDto> = emptyList(),
     val issuedCredentialBanner: String? = null,
+    val issuedCredentials: IssuedCredentialsDto? = null,
 )
 
 @HiltViewModel
@@ -33,9 +34,26 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    fun reset() {
+        _uiState.value = DashboardUiState(isLoading = true)
+    }
+
+    suspend fun getActivitiesForUser(userId: Int): List<ActivityLogDto> {
+        return (repository.listActivities(userId = userId, limit = 40) as? RepoResult.Success)?.data ?: emptyList()
+    }
+
+    suspend fun getActivitiesForCollege(collegeId: Int): List<ActivityLogDto> {
+        return (repository.listActivities(collegeId = collegeId, limit = 40) as? RepoResult.Success)?.data ?: emptyList()
+    }
+
+    suspend fun getActivitiesForCenter(centerId: Int): List<ActivityLogDto> {
+        return (repository.listActivities(centerId = centerId, limit = 40) as? RepoResult.Success)?.data ?: emptyList()
+    }
+
     fun loadDashboardForRole(role: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            // Immediately clear any old session or role state to prevent cross-login data leak
+            _uiState.value = DashboardUiState(isLoading = true)
             val dashRes = repository.getDashboard()
             if (dashRes is RepoResult.Error) {
                 _uiState.update { it.copy(isLoading = false, error = dashRes.message) }
@@ -81,7 +99,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun clearCredentialBanner() {
-        _uiState.update { it.copy(issuedCredentialBanner = null) }
+        _uiState.update { it.copy(issuedCredentialBanner = null, issuedCredentials = null) }
     }
 
     fun createCollege(req: CollegeCreateDto, role: String) {
@@ -89,10 +107,21 @@ class DashboardViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             when (val res = repository.createCollege(req)) {
                 is RepoResult.Success -> {
-                    val banner = res.data.adminUser?.let { admin ->
-                        "College Created!\nAdmin Username: ${admin.username}\nUser ID: ${admin.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
+                    val admin = res.data.adminUser
+                    val creds = admin?.let {
+                        IssuedCredentialsDto(
+                            title = "College Admin Account Created",
+                            entityName = res.data.college.name,
+                            username = it.username,
+                            userUid = it.userUid,
+                            temporaryPassword = res.data.temporaryPassword ?: "",
+                            role = "College Admin",
+                        )
+                    }
+                    val banner = admin?.let {
+                        "College Created!\nAdmin Username: ${it.username}\nUser ID: ${it.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
                     } ?: "Dental College '${res.data.college.name}' created successfully."
-                    _uiState.update { it.copy(issuedCredentialBanner = banner) }
+                    _uiState.update { it.copy(issuedCredentialBanner = banner, issuedCredentials = creds) }
                     loadDashboardForRole(role)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
@@ -112,10 +141,21 @@ class DashboardViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             when (val res = repository.createCenter(req)) {
                 is RepoResult.Success -> {
-                    val banner = res.data.adminUser?.let { admin ->
-                        "Center Created!\nAdmin Username: ${admin.username}\nUser ID: ${admin.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
+                    val admin = res.data.adminUser
+                    val creds = admin?.let {
+                        IssuedCredentialsDto(
+                            title = "Center Admin Account Created",
+                            entityName = res.data.center.name,
+                            username = it.username,
+                            userUid = it.userUid,
+                            temporaryPassword = res.data.temporaryPassword ?: "",
+                            role = "Center Admin",
+                        )
+                    }
+                    val banner = admin?.let {
+                        "Center Created!\nAdmin Username: ${it.username}\nUser ID: ${it.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
                     } ?: "Screening Center '${res.data.center.name}' created successfully."
-                    _uiState.update { it.copy(issuedCredentialBanner = banner) }
+                    _uiState.update { it.copy(issuedCredentialBanner = banner, issuedCredentials = creds) }
                     loadDashboardForRole(role)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
@@ -136,12 +176,22 @@ class DashboardViewModel @Inject constructor(
             when (val res = repository.generateOrResetCenterAdmin(centerId)) {
                 is RepoResult.Success -> {
                     val admin = res.data.adminUser
+                    val creds = admin?.let {
+                        IssuedCredentialsDto(
+                            title = "Center Admin Credentials Reset",
+                            entityName = res.data.center.name,
+                            username = it.username,
+                            userUid = it.userUid,
+                            temporaryPassword = res.data.temporaryPassword ?: "",
+                            role = "Center Admin",
+                        )
+                    }
                     val banner = if (admin != null) {
                         "Center Admin Credentials Issued!\nCenter: ${res.data.center.name}\nAdmin Username: ${admin.username}\nUser ID: ${admin.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
                     } else {
                         "Center credentials updated successfully."
                     }
-                    _uiState.update { it.copy(isLoading = false, issuedCredentialBanner = banner) }
+                    _uiState.update { it.copy(isLoading = false, issuedCredentialBanner = banner, issuedCredentials = creds) }
                     loadDashboardForRole(role)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
@@ -155,8 +205,16 @@ class DashboardViewModel @Inject constructor(
             when (val res = repository.createOrganizer(req)) {
                 is RepoResult.Success -> {
                     val u = res.data.organizer.user
-                    val banner = "Health Organizer Assistant Created!\nUsername: ${u?.username}\nUser ID: ${u?.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
-                    _uiState.update { it.copy(issuedCredentialBanner = banner) }
+                    val creds = IssuedCredentialsDto(
+                        title = "Health Assistant Account Created",
+                        entityName = res.data.organizer.employeeCode,
+                        username = u?.username ?: req.username,
+                        userUid = u?.userUid,
+                        temporaryPassword = res.data.temporaryPassword,
+                        role = "Health Organizer Assistant",
+                    )
+                    val banner = "Health Organizer Assistant Created!\nUsername: ${u?.username ?: req.username}\nUser ID: ${u?.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
+                    _uiState.update { it.copy(issuedCredentialBanner = banner, issuedCredentials = creds) }
                     loadDashboardForRole(role)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
