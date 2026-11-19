@@ -117,3 +117,130 @@ cd SDC
 - **File Storage**: Store `STORAGE_ROOT` on an encrypted volume outside web roots (or swap `SecureFileStorage` with S3/GCS signed access).
 - **Backups & Retention**: Schedule encrypted daily `mysqldump --single-transaction` backups and configure retention in Super Admin Settings.
 - **Clinical & Regulatory Sign-off**: Complete local healthcare privacy/consent review and clinically validate any oral-health AI model before setting `AI_MODEL_PATH`.
+
+
+Here is how the AI system in OralCare works across the entire pipeline:
+
+[ Upload Clinical Photo ]
+           │
+           ▼
+[ 1. Image Quality & Preprocessing (OpenCV) ]
+   • Resolution verification (min 300x300)
+   • Motion blur detection (Laplacian variance)
+   • Lighting & contrast checks (Mean brightness 35–235)
+   • CLAHE local adaptive lighting normalization
+           │
+           ▼
+[ 2. Feature Extraction & AI Analysis ]
+   • White plaque / Leukoplakia detection (LAB/HSV)
+   • Erythematous / Red patch detection (LAB a* > 168)
+   • Ulcerated / Dark mucosal irregularity
+   • Texture heterogeneity (Canny edge density)
+   (Or PyTorch TorchScript model via AI_MODEL_PATH)
+           │
+           ▼
+[ 3. Holistic Clinical + AI Outcome Integration ]
+   Combines:
+   • Step 6 Clinical region findings
+   • Step 7 Lesion documentation
+   • Step 9 Biopsy & lab keywords
+   • Step 10 AI image anomalies
+           │
+           ▼
+[ 4. Unified Outcome: NORMAL or ABNORMAL ]
+   + Diagnostic reasons & recommendations
+   + Clinician governance (Confirm / Override)
+1. Image Quality & Preprocessing (preprocessor.py)
+
+Before any AI model evaluates an image, it passes through an objective OpenCV quality gate:
+
+Sharpness / Blur Detection: Computes the Laplacian variance across the image. If 
+Var
+<
+25.0
+Var<25.0, the image is flagged as BLURRY (potential motion blur).
+Illumination & Glare Check: Evaluates mean grayscale illumination. Values 
+<
+35
+<35 or 
+>
+235
+>235 are flagged as POOR_LIGHTING.
+Contrast & Resolution: Checks that resolution meets minimum clinical standards (
+≥
+300
+×
+300
+≥300×300).
+Color Normalization: Converts BGR to RGB and applies CLAHE (Contrast Limited Adaptive Histogram Equalization) in LAB color space to normalize localized camera flash shadows without distorting tissue color, resizing to standard 
+224
+×
+224
+224×224.
+2. Anomaly Detection Engine (model_registry.py)
+
+The system analyzes the central 70% region-of-interest (where mucosal tissue is framed) for 4 primary clinical markers:
+
+Clinical Marker	Detection Logic	Target Oral Lesions
+Keratotic / White Plaque	High luminance (
+𝐿
+∗
+>
+205
+L
+∗
+>205) + low saturation (
+𝑆
+<
+48
+S<48) excluding specular reflections	Leukoplakia, Candidiasis, Lichen planus
+Erythema / Red Lesion	High red chrominance (
+𝑎
+∗
+>
+168
+a
+∗
+>168) + high saturation (
+𝑆
+>
+115
+S>115)	Erythroplakia, inflammation, erosions
+Ulcer / Necrotic Area	Low luminance (
+𝐿
+∗
+<
+52
+L
+∗
+<52) + elevated redness	Aphthous / traumatic ulcers, malignant margins
+Texture Heterogeneity	Canny edge density 
+>
+0.24
+>0.24 inside mucosal ROI	Mucosal roughness, induration, cobblestoning
+Scoring: Computes a weighted anomaly_score. If 
+Score
+≥
+0.36
+Score≥0.36 or any flagged threshold is crossed, the image is classified as ABNORMAL; otherwise NORMAL.
+Deep Learning Support: If a validated deep-learning model (.pt or .pts TorchScript) is configured in .env (AI_MODEL_PATH), the registry seamlessly switches from the OpenCV analyzer to the deep neural network.
+3. Holistic Outcome Integration (screening_service.py)
+
+The AI image outcome is never isolated from medical reality. The final patient screening result combines:
+
+AI Image Analysis: Any uploaded photo flagged as abnormal.
+Clinical Findings: Any anatomical region observed as abnormal during examination.
+Lesion Records: Size, site, and characteristics of any recorded oral lesions.
+Biopsy / Lab Keywords: Detection of pathology terms (dysplasia, carcinoma, OSMF, etc.).
+High-Risk Habits: Tobacco, arecanut, or alcohol consumption risk weighting.
+
+If any factor indicates pathology, the screening outcome is assigned ABNORMAL with transparent contributing reasons. If all checks are clear, it is NORMAL.
+
+4. Human-in-the-Loop Clinician Governance
+The AI acts as an assistive diagnostic aid, not an autonomous decision maker.
+Qualified dental clinicians can inspect AI confidence scores, detected flags, and visual metrics on the screening detail view.
+Clinicians have full ability to Confirm or Override the AI flag, and rejected AI flags are discounted from subsequent clinical evaluations.
+5. When Does the AI Run?
+Initial Screening: When completing Step 10 & Step 11 of the screening wizard, the app automatically calls finalize-with-ai upon bundle submission.
+"Examine Again" (New): When re-examining a patient from their profile, uploading clinical images automatically triggers finalize-with-ai, immediately updating the patient's diagnostic outcome, timeline, and downloadable PDF report.
+On Demand: Individual images can also be re-analyzed at any time from the clinical image view.

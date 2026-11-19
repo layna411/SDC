@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val authViewModel: AuthViewModel = hiltViewModel()
             val session by authViewModel.session.collectAsState()
-            OralCareTheme(darkTheme = session.darkMode) {
+            OralCareTheme(darkTheme = false) {
                 OralCareAppRoot(authViewModel = authViewModel)
             }
         }

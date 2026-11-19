@@ -590,7 +590,7 @@ fun ProfileSettingsScreen(
     isOnline: Boolean,
     appSettings: List<AppSettingDto>,
     onBack: () -> Unit,
-    onToggleDarkMode: () -> Unit,
+    onToggleDarkMode: (() -> Unit)? = null,
     onChangePassword: () -> Unit,
     onSaveServerUrl: (String) -> Unit,
     onSaveAppSetting: (String, String, String) -> Unit,
@@ -673,22 +673,6 @@ fun ProfileSettingsScreen(
                 // Preferences & Security
                 SectionHeader("Account & Preferences")
                 GlassCard(contentPadding = PaddingValues(6.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Brightness6, contentDescription = null, tint = OralCareColors.AccentBlueStrong)
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text("Dark Theme", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                                Text("Switch between light and dark appearance", style = MaterialTheme.typography.bodySmall, color = OralCareColors.TextSecondary)
-                            }
-                        }
-                        Switch(checked = session.darkMode, onCheckedChange = { onToggleDarkMode() })
-                    }
-                    HorizontalDivider(color = OralCareColors.LightBlue, modifier = Modifier.padding(horizontal = 12.dp))
                     ProfileActionRow(Icons.Default.LockReset, "Change Password", "Update your login password", onChangePassword)
                     if (session.role == "SUPER_ADMIN") {
                         HorizontalDivider(color = OralCareColors.LightBlue, modifier = Modifier.padding(horizontal = 12.dp))
