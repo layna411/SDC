@@ -51,6 +51,10 @@ interface OralCareRepository {
 
     suspend fun getPatient(id: Int): RepoResult<PatientDto>
     suspend fun getPatientScreenings(id: Int): RepoResult<List<ScreeningDetailDto>>
+    suspend fun reexaminePatient(
+        patientId: Int,
+        localImages: List<Triple<String, String?, String>>,
+    ): RepoResult<ScreeningDetailDto>
     suspend fun listScreenings(outcome: String? = null): RepoResult<List<ScreeningDetailDto>>
     suspend fun getScreeningDetail(id: Int): RepoResult<ScreeningDetailDto>
 

@@ -94,6 +94,9 @@ interface OralCareApiService {
     @GET("patients/{id}/report")
     suspend fun downloadPatientReport(@Path("id") id: Int): Response<ResponseBody>
 
+    @POST("patients/{id}/re-examine")
+    suspend fun reexaminePatient(@Path("id") id: Int): Response<ScreeningDetailDto>
+
     // Screenings (11-Step Complete Bundle + Detail)
     @POST("screenings/complete-bundle")
     suspend fun submitCompleteScreening(@Body body: CompleteScreeningBundleDto): Response<ScreeningDetailDto>

@@ -10,6 +10,7 @@ import com.simats.sdc.data.dto.PatientDto
 import com.simats.sdc.data.dto.ScreeningDetailDto
 import com.simats.sdc.domain.repository.OralCareRepository
 import com.simats.sdc.domain.repository.RepoResult
+import com.simats.sdc.presentation.screening.LocalCapturedImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -46,6 +47,11 @@ data class PatientsUiState(
     val reportDownloadedFile: File? = null,
     val reportError: String? = null,
     val reportMessage: String? = null,
+    val isReexamining: Boolean = false,
+    val reexamineImages: List<LocalCapturedImage> = emptyList(),
+    val isSubmittingReexamination: Boolean = false,
+    val reexaminationError: String? = null,
+    val reexaminationSuccess: ScreeningDetailDto? = null,
 )
 
 @HiltViewModel
@@ -264,5 +270,82 @@ class PatientsViewModel @Inject constructor(
 
     fun clearReportMessage() {
         _uiState.update { it.copy(reportMessage = null, reportError = null) }
+    }
+
+    fun startReexamination() {
+        _uiState.update {
+            it.copy(
+                isReexamining = true,
+                reexamineImages = emptyList(),
+                reexaminationError = null,
+                reexaminationSuccess = null,
+            )
+        }
+    }
+
+    fun dismissReexamination() {
+        _uiState.update {
+            it.copy(
+                isReexamining = false,
+                reexamineImages = emptyList(),
+                reexaminationError = null,
+                reexaminationSuccess = null,
+            )
+        }
+    }
+
+    fun addReexamineImage(region: String, subRegion: String?, localPath: String) {
+        _uiState.update { s ->
+            val filtered = s.reexamineImages.filterNot { it.clinicalRegion.equals(region, ignoreCase = true) }
+            s.copy(
+                reexamineImages = filtered + LocalCapturedImage(
+                    clinicalRegion = region,
+                    subRegion = subRegion,
+                    localPath = localPath,
+                )
+            )
+        }
+    }
+
+    fun removeReexamineImage(region: String) {
+        _uiState.update { s ->
+            s.copy(reexamineImages = s.reexamineImages.filterNot { it.clinicalRegion.equals(region, ignoreCase = true) })
+        }
+    }
+
+    fun submitReexamination(patientId: Int) {
+        val s = _uiState.value
+        if (s.reexamineImages.isEmpty()) {
+            _uiState.update { it.copy(reexaminationError = "Please capture or select at least one clinical image to examine.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSubmittingReexamination = true, reexaminationError = null) }
+            val imgs = s.reexamineImages.map { Triple(it.clinicalRegion, it.subRegion, it.localPath) }
+            when (val res = repository.reexaminePatient(patientId, imgs)) {
+                is RepoResult.Success -> {
+                    val freshPatient = (repository.getPatient(patientId) as? RepoResult.Success)?.data ?: s.selectedPatient
+                    val scrRes = repository.getPatientScreenings(patientId)
+                    _uiState.update {
+                        it.copy(
+                            isSubmittingReexamination = false,
+                            reexaminationSuccess = res.data,
+                            selectedPatient = freshPatient,
+                            patientScreenings = (scrRes as? RepoResult.Success)?.data ?: it.patientScreenings,
+                        )
+                    }
+                    loadPatients(s.page)
+                }
+                is RepoResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isSubmittingReexamination = false,
+                            reexaminationError = res.message,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

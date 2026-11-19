@@ -1,9 +1,15 @@
 package com.simats.sdc.presentation.patient
 
+import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
@@ -25,7 +32,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,10 +43,13 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.simats.sdc.core.common.AnatomicalRegionSpec
+import com.simats.sdc.core.common.ClinicalConstants
 import com.simats.sdc.core.theme.OralCareColors
 import com.simats.sdc.core.theme.OralCareTokens
 import com.simats.sdc.data.dto.*
 import com.simats.sdc.presentation.components.*
+import com.simats.sdc.presentation.screening.LocalCapturedImage
 import java.io.File
 
 @Composable
@@ -65,6 +77,16 @@ fun PatientsScreen(viewModel: PatientsViewModel) {
             reportDownloadedFile = state.reportDownloadedFile,
             reportMessage = state.reportMessage,
             reportError = state.reportError,
+            isReexamining = state.isReexamining,
+            reexamineImages = state.reexamineImages,
+            isSubmittingReexamination = state.isSubmittingReexamination,
+            reexaminationError = state.reexaminationError,
+            reexaminationSuccess = state.reexaminationSuccess,
+            onStartReexamination = { viewModel.startReexamination() },
+            onDismissReexamination = { viewModel.dismissReexamination() },
+            onAddReexamineImage = { r, s, p -> viewModel.addReexamineImage(r, s, p) },
+            onRemoveReexamineImage = { r -> viewModel.removeReexamineImage(r) },
+            onSubmitReexamination = { id -> viewModel.submitReexamination(id) },
             onDownloadReport = { viewModel.downloadPatientReport(detailPatient, state.patientScreenings) },
             onShareReport = { viewModel.sharePatientReport(context, detailPatient, state.patientScreenings) },
             onRefresh = { viewModel.refreshSelectedPatient() },
@@ -172,6 +194,16 @@ private fun PatientDetailView(
     reportDownloadedFile: File?,
     reportMessage: String?,
     reportError: String?,
+    isReexamining: Boolean,
+    reexamineImages: List<LocalCapturedImage>,
+    isSubmittingReexamination: Boolean,
+    reexaminationError: String?,
+    reexaminationSuccess: ScreeningDetailDto?,
+    onStartReexamination: () -> Unit,
+    onDismissReexamination: () -> Unit,
+    onAddReexamineImage: (String, String?, String) -> Unit,
+    onRemoveReexamineImage: (String) -> Unit,
+    onSubmitReexamination: (Int) -> Unit,
     onDownloadReport: () -> Unit,
     onShareReport: () -> Unit,
     onRefresh: () -> Unit,
@@ -385,6 +417,55 @@ private fun PatientDetailView(
                 }
             }
 
+            // Examine Again Action Card
+            item {
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(16.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = OralCareColors.PrimaryBlue.copy(alpha = 0.12f),
+                            modifier = Modifier.size(44.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.AddAPhoto,
+                                    contentDescription = null,
+                                    tint = OralCareColors.AccentBlueStrong,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Examine Again",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = OralCareColors.TextPrimary,
+                            )
+                            Text(
+                                text = "Upload clinical images only & get updated AI assessment",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OralCareColors.TextSecondary,
+                            )
+                        }
+                        GlassButton(
+                            text = "Examine",
+                            icon = Icons.Default.CameraAlt,
+                            fontSize = 12.sp,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 9.dp),
+                            onClick = onStartReexamination,
+                        )
+                    }
+                }
+            }
+
             // Complete Patient Demographics Card (Step 2)
             item {
                 GlassCard(contentPadding = PaddingValues(16.dp)) {
@@ -480,6 +561,699 @@ private fun PatientDetailView(
                     IconButton(onClick = { previewImage = null }) {
                         Icon(Icons.Default.Close, contentDescription = "Close preview", tint = Color.White)
                     }
+                }
+            }
+        }
+    }
+
+    if (isReexamining) {
+        ReexaminationDialog(
+            patient = patient,
+            images = reexamineImages,
+            isSubmitting = isSubmittingReexamination,
+            error = reexaminationError,
+            successResult = reexaminationSuccess,
+            onAddImage = onAddReexamineImage,
+            onRemoveImage = onRemoveReexamineImage,
+            onSubmit = { onSubmitReexamination(patient.id) },
+            onDismiss = onDismissReexamination,
+        )
+    }
+}
+
+@Composable
+private fun ReexaminationDialog(
+    patient: PatientDto,
+    images: List<LocalCapturedImage>,
+    isSubmitting: Boolean,
+    error: String?,
+    successResult: ScreeningDetailDto?,
+    onAddImage: (String, String?, String) -> Unit,
+    onRemoveImage: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    var targetSpec by remember { mutableStateOf(ClinicalConstants.ANATOMICAL_REGIONS.first()) }
+    var targetSubRegion by remember { mutableStateOf(ClinicalConstants.ANATOMICAL_REGIONS.first().subRegions.first()) }
+    var showCameraDialog by remember { mutableStateOf(false) }
+    var cameraError by remember { mutableStateOf<String?>(null) }
+    var autoPromptNextRegion by remember { mutableStateOf<AnatomicalRegionSpec?>(null) }
+    var autoPromptLastSavedRegion by remember { mutableStateOf<String?>(null) }
+    var previewLocalPath by remember { mutableStateOf<String?>(null) }
+
+    fun handleImageSaved(region: String, subRegion: String?, localPath: String) {
+        onAddImage(region, subRegion, localPath)
+        autoPromptLastSavedRegion = region
+        val allRegions = ClinicalConstants.ANATOMICAL_REGIONS
+        val currentNames = (images.map { it.clinicalRegion.trim().lowercase() } + region.trim().lowercase()).toSet()
+        val next = allRegions.firstOrNull { it.name.trim().lowercase() !in currentNames }
+        if (next != null) {
+            autoPromptNextRegion = next
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) showCameraDialog = true else cameraError = "Camera permission is required to capture clinical photos."
+    }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val dir = File(context.filesDir, "clinical_images").apply { mkdirs() }
+                val dest = File(dir, "reexamine_${System.currentTimeMillis()}.jpg")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    dest.outputStream().use { output -> input.copyTo(output) }
+                }
+                handleImageSaved(targetSpec.name, targetSubRegion, dest.absolutePath)
+            } catch (e: Exception) {
+                cameraError = "Unable to copy selected image: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun launchCameraFor(spec: AnatomicalRegionSpec, subRegion: String? = null) {
+        targetSpec = spec
+        targetSubRegion = subRegion ?: spec.subRegions.first()
+        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    fun launchGalleryFor(spec: AnatomicalRegionSpec, subRegion: String? = null) {
+        targetSpec = spec
+        targetSubRegion = subRegion ?: spec.subRegions.first()
+        photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+
+    val capturedRegionMap = remember(images) {
+        images.associateBy { it.clinicalRegion.trim().lowercase() }
+    }
+    val capturedCount = ClinicalConstants.ANATOMICAL_REGIONS.count {
+        it.name.trim().lowercase() in capturedRegionMap
+    }
+
+    Dialog(
+        onDismissRequest = { if (!isSubmitting) onDismiss() },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFFF2F7FC),
+        ) {
+            if (successResult != null) {
+                // Success Assessment Card
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(20.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(22.dp),
+                        color = Color.White,
+                        border = BorderStroke(1.2.dp, Color(0xFFC0DEF8)),
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            val isNormalResult = successResult.outcome.equals("NORMAL", ignoreCase = true)
+                            Surface(
+                                shape = CircleShape,
+                                color = if (isNormalResult) OralCareColors.NormalGreenBg else OralCareColors.AbnormalRedBg,
+                                modifier = Modifier.size(64.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (isNormalResult) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = if (isNormalResult) OralCareColors.NormalGreen else OralCareColors.AbnormalRed,
+                                        modifier = Modifier.size(36.dp),
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "Re-Examination Complete!",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = OralCareColors.TextPrimary,
+                                textAlign = TextAlign.Center,
+                            )
+
+                            Text(
+                                text = "AI analyzed the newly uploaded clinical images for ${patient.displayName} and re-evaluated diagnostic markers.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = OralCareColors.TextSecondary,
+                                textAlign = TextAlign.Center,
+                            )
+
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isNormalResult) OralCareColors.NormalGreenBg else OralCareColors.AbnormalRedBg,
+                                border = BorderStroke(1.dp, if (isNormalResult) OralCareColors.NormalGreen.copy(alpha = 0.4f) else OralCareColors.AbnormalRed.copy(alpha = 0.4f)),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(14.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text(
+                                        text = "Updated Screening Outcome: ${successResult.outcome}",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isNormalResult) OralCareColors.NormalGreen else OralCareColors.AbnormalRed,
+                                    )
+                                    Text(
+                                        text = "Screening ID: ${successResult.screeningUid}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = OralCareColors.TextSecondary,
+                                    )
+                                }
+                            }
+
+                            GlassButton(
+                                text = "View Updated Patient Record",
+                                icon = Icons.Default.Check,
+                                onClick = onDismiss,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Re-Examination Checklist & Uploader
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Header
+                    GlassHeader(
+                        title = "Examine Again",
+                        subtitle = "${patient.displayName} • ${patient.patientUid}",
+                        showBackButton = true,
+                        onBack = onDismiss,
+                    )
+
+                    // Scrollable Checklist
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        // Guide banner
+                        GlassCard(
+                            borderColor = Color(0xFFC0DEF8),
+                            contentPadding = PaddingValues(14.dp),
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = OralCareColors.AccentBlueStrong,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "Re-Examination: Upload Images Only",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OralCareColors.TextPrimary,
+                                    )
+                                }
+                                Text(
+                                    text = "Patient demographic & medical baselines are preserved. Capture or select clinical images for the oral regions below to re-evaluate with AI.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OralCareColors.TextSecondary,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        text = "Captured: $capturedCount / 11 Regions",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = OralCareColors.AccentBlueStrong,
+                                    )
+                                    if (capturedCount > 0) {
+                                        Text(
+                                            text = "${images.size} photo(s) ready",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = OralCareColors.NormalGreen,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                                LinearProgressIndicator(
+                                    progress = { (capturedCount.toFloat() / 11f).coerceIn(0f, 1f) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = OralCareColors.AccentBlueStrong,
+                                    trackColor = Color(0xFFD6E8FA),
+                                )
+                            }
+                        }
+
+                        // Quick Capture Target Card
+                        GlassCard(contentPadding = PaddingValues(14.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text(
+                                    text = "Quick Photo Capture",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OralCareColors.TextPrimary,
+                                )
+                                GlassDropdown(
+                                    label = "Select Anatomical Region",
+                                    selectedValue = targetSpec.name,
+                                    options = ClinicalConstants.ANATOMICAL_REGIONS.map { it.name },
+                                    onOptionSelected = { name ->
+                                        val s = ClinicalConstants.getRegionSpecByName(name)
+                                        targetSpec = s
+                                        targetSubRegion = s.subRegions.first()
+                                    },
+                                )
+                                if (targetSpec.subRegions.size > 1) {
+                                    GlassDropdown(
+                                        label = "Sub-Region",
+                                        selectedValue = targetSubRegion,
+                                        options = targetSpec.subRegions,
+                                        onOptionSelected = { targetSubRegion = it },
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    GlassButton(
+                                        text = "Take Photo",
+                                        icon = Icons.Default.PhotoCamera,
+                                        onClick = { launchCameraFor(targetSpec, targetSubRegion) },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    GlassButton(
+                                        text = "Gallery",
+                                        icon = Icons.Default.PhotoLibrary,
+                                        isPrimary = false,
+                                        onClick = { launchGalleryFor(targetSpec, targetSubRegion) },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            }
+                        }
+
+                        // 11 Anatomical Regions List
+                        Text(
+                            text = "11-Region Checklist",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = OralCareColors.TextPrimary,
+                        )
+
+                        ClinicalConstants.ANATOMICAL_REGIONS.forEachIndexed { idx, spec ->
+                            val captured = capturedRegionMap[spec.name.trim().lowercase()]
+                            val isCaptured = captured != null
+
+                            GlassCard(
+                                borderColor = if (isCaptured) OralCareColors.NormalGreen.copy(alpha = 0.45f) else Color(0xFFC0DEF8),
+                                contentPadding = PaddingValues(12.dp),
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        // Standard Anatomical Reference Thumbnail
+                                        Box(
+                                            modifier = Modifier
+                                                .size(54.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFF0F1E2E))
+                                                .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(8.dp)),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = spec.drawableRes),
+                                                contentDescription = spec.name,
+                                                contentScale = ContentScale.Fit,
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                        }
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "${idx + 1}. ${spec.name}",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = OralCareColors.TextPrimary,
+                                            )
+                                            Text(
+                                                text = spec.referenceGuide,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = OralCareColors.TextSecondary,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                            Spacer(Modifier.height(3.dp))
+                                            if (isCaptured) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.CheckCircle,
+                                                        contentDescription = null,
+                                                        tint = OralCareColors.NormalGreen,
+                                                        modifier = Modifier.size(14.dp),
+                                                    )
+                                                    Spacer(Modifier.width(4.dp))
+                                                    Text(
+                                                        text = "Captured • ${captured?.subRegion ?: spec.subRegions.first()}",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = OralCareColors.NormalGreen,
+                                                        fontWeight = FontWeight.Bold,
+                                                    )
+                                                }
+                                            } else {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.ErrorOutline,
+                                                        contentDescription = null,
+                                                        tint = OralCareColors.WarningAmber,
+                                                        modifier = Modifier.size(14.dp),
+                                                    )
+                                                    Spacer(Modifier.width(4.dp))
+                                                    Text(
+                                                        text = "Photo Needed",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = OralCareColors.WarningAmber,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Captured thumbnail if ready
+                                        if (isCaptured && captured != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(54.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .border(1.5.dp, OralCareColors.NormalGreen, RoundedCornerShape(8.dp))
+                                                    .clickable { previewLocalPath = captured.localPath },
+                                            ) {
+                                                SubcomposeAsyncImage(
+                                                    model = File(captured.localPath),
+                                                    contentDescription = "Captured ${spec.name}",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Action buttons row
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        if (isCaptured) {
+                                            GlassButton(
+                                                text = "Retake",
+                                                icon = Icons.Default.CameraAlt,
+                                                fontSize = 11.sp,
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 7.dp),
+                                                onClick = { launchCameraFor(spec) },
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                            GlassButton(
+                                                text = "Gallery",
+                                                icon = Icons.Default.PhotoLibrary,
+                                                isPrimary = false,
+                                                fontSize = 11.sp,
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 7.dp),
+                                                onClick = { launchGalleryFor(spec) },
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                            IconButton(
+                                                onClick = { onRemoveImage(spec.name) },
+                                                modifier = Modifier.size(34.dp),
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Delete,
+                                                    contentDescription = "Remove",
+                                                    tint = OralCareColors.AbnormalRed,
+                                                    modifier = Modifier.size(18.dp),
+                                                )
+                                            }
+                                        } else {
+                                            GlassButton(
+                                                text = "Take Photo",
+                                                icon = Icons.Default.CameraAlt,
+                                                fontSize = 11.5.sp,
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 7.dp),
+                                                onClick = { launchCameraFor(spec) },
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                            GlassButton(
+                                                text = "Gallery",
+                                                icon = Icons.Default.PhotoLibrary,
+                                                isPrimary = false,
+                                                fontSize = 11.5.sp,
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 7.dp),
+                                                onClick = { launchGalleryFor(spec) },
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Pinned Bottom Action Footer
+                    Surface(
+                        color = Color.White.copy(alpha = 0.95f),
+                        shadowElevation = 10.dp,
+                        border = BorderStroke(1.dp, Color(0xFFE4EFF8)),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            if (!error.isNullOrBlank()) {
+                                Text(
+                                    text = error,
+                                    color = OralCareColors.AbnormalRed,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            if (!cameraError.isNullOrBlank()) {
+                                Text(
+                                    text = cameraError!!,
+                                    color = OralCareColors.AbnormalRed,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                GlassButton(
+                                    text = if (isSubmitting) "Analyzing with AI..." else "Run AI Assessment",
+                                    icon = Icons.Default.Psychology,
+                                    loading = isSubmitting,
+                                    enabled = images.isNotEmpty() && !isSubmitting,
+                                    onClick = onSubmit,
+                                    modifier = Modifier.weight(1.4f),
+                                )
+                                GlassButton(
+                                    text = "Cancel",
+                                    isPrimary = false,
+                                    enabled = !isSubmitting,
+                                    onClick = onDismiss,
+                                    modifier = Modifier.weight(0.8f),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Active Camera Capture Viewfinder
+    if (showCameraDialog) {
+        CameraCaptureDialog(
+            regionTitle = "${targetSpec.name} ($targetSubRegion)",
+            referenceDrawableRes = targetSpec.drawableRes,
+            onImageCaptured = { file ->
+                showCameraDialog = false
+                handleImageSaved(targetSpec.name, targetSubRegion, file.absolutePath)
+            },
+            onError = { msg ->
+                showCameraDialog = false
+                cameraError = msg
+            },
+            onDismiss = { showCameraDialog = false },
+        )
+    }
+
+    // Automatic Next-Image Prompt Dialog ("If we upload one thing automatically it need to ask for other image")
+    if (autoPromptNextRegion != null) {
+        val next = autoPromptNextRegion!!
+        val currentSavedCount = (images.map { it.clinicalRegion.trim().lowercase() } + autoPromptLastSavedRegion?.trim()?.lowercase()).filterNotNull().toSet().size
+        val nextIdx = ClinicalConstants.ANATOMICAL_REGIONS.indexOfFirst { it.name == next.name }
+
+        Dialog(
+            onDismissRequest = { autoPromptNextRegion = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(22.dp),
+                color = Color.White,
+                border = BorderStroke(1.5.dp, Color(0xFFC0DEF8)),
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .clip(RoundedCornerShape(22.dp)),
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = OralCareColors.NormalGreenBg,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = OralCareColors.NormalGreen, modifier = Modifier.size(15.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "Saved: ${autoPromptLastSavedRegion ?: "Region"}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OralCareColors.NormalGreen,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Next Required Photo: ${next.name}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OralCareColors.TextPrimary,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = "Region ${nextIdx + 1} of 11 • ${11 - currentSavedCount} remaining",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OralCareColors.AccentBlueStrong,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF0F1E2E))
+                            .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            painter = painterResource(id = next.drawableRes),
+                            contentDescription = next.name,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    Text(
+                        text = next.referenceGuide,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OralCareColors.TextPrimary,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        GlassButton(
+                            text = "Take Photo",
+                            icon = Icons.Default.CameraAlt,
+                            onClick = {
+                                val target = next
+                                autoPromptNextRegion = null
+                                launchCameraFor(target)
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        GlassButton(
+                            text = "Gallery",
+                            icon = Icons.Default.PhotoLibrary,
+                            isPrimary = false,
+                            onClick = {
+                                val target = next
+                                autoPromptNextRegion = null
+                                launchGalleryFor(target)
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
+                    TextButton(
+                        onClick = { autoPromptNextRegion = null },
+                    ) {
+                        Text("Review Uploads / Later", color = OralCareColors.TextSecondary)
+                    }
+                }
+            }
+        }
+    }
+
+    // Zoom Image Preview Dialog
+    if (previewLocalPath != null) {
+        val f = File(previewLocalPath!!)
+        Dialog(
+            onDismissRequest = { previewLocalPath = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.92f))
+                    .clickable { previewLocalPath = null },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (f.exists()) {
+                    SubcomposeAsyncImage(
+                        model = f,
+                        contentDescription = "Zoomed Preview",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                    )
+                }
+                IconButton(
+                    onClick = { previewLocalPath = null },
+                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
                 }
             }
         }

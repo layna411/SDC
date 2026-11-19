@@ -645,6 +645,32 @@ class OralCareRepositoryImpl @Inject constructor(
     override suspend fun getPatientScreenings(id: Int): RepoResult<List<ScreeningDetailDto>> =
         safeCall { api.getPatientScreenings(id) }
 
+    override suspend fun reexaminePatient(
+        patientId: Int,
+        localImages: List<Triple<String, String?, String>>,
+    ): RepoResult<ScreeningDetailDto> {
+        val startRes = safeCall { api.reexaminePatient(patientId) }
+        if (startRes !is RepoResult.Success) {
+            return startRes
+        }
+        val screening = startRes.data
+
+        // Upload each captured clinical image
+        for ((region, sub, path) in localImages) {
+            val file = File(path)
+            if (file.exists()) {
+                uploadImage(screening.id, region, sub, file)
+            }
+        }
+
+        // Run assistive AI image analysis & evaluate updated clinical outcome
+        val aiFinalized = safeCall { api.finalizeScreeningWithAi(screening.id) }
+        if (aiFinalized is RepoResult.Success) {
+            return aiFinalized
+        }
+        return getScreeningDetail(screening.id)
+    }
+
     override suspend fun listScreenings(outcome: String?): RepoResult<List<ScreeningDetailDto>> =
         safeCall { api.listScreenings(outcome) }
 
