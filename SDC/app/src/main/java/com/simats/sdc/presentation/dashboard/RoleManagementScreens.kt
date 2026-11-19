@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -1135,7 +1136,7 @@ internal fun AddCollegeModal(onDismiss: () -> Unit, onSubmit: (CollegeCreateDto)
             GlassTextField(city, { city = it }, "City")
             GlassTextField(state, { state = it }, "State")
             GlassTextField(adminUser, { adminUser = it }, "College Admin Username (Unique ID)")
-            GlassTextField(adminName, { adminName = it }, "College Admin Full Name")
+            GlassTextField(adminName, { adminName = it }, "College Admin Full Name", imeAction = ImeAction.Done)
         }
     }
 }
@@ -1215,7 +1216,7 @@ internal fun AddCenterModal(
             GlassTextField(hub, { hub = it }, "Hub Name (Optional)")
             GlassTextField(partner, { partner = it }, "Health Partner (Optional)")
             GlassTextField(adminUser, { adminUser = it }, "Center Admin Username (Unique ID)")
-            GlassTextField(adminName, { adminName = it }, "Center Admin Full Name")
+            GlassTextField(adminName, { adminName = it }, "Center Admin Full Name", imeAction = ImeAction.Done)
             Text(
                 text = "An administrator account with login credentials will be generated automatically upon center creation.",
                 style = MaterialTheme.typography.bodySmall,
@@ -1294,7 +1295,7 @@ internal fun AddOrganizerModal(
             GlassTextField(email, { email = it }, "Email ID (Optional)", keyboardType = KeyboardType.Email)
             GlassTextField(phone, { phone = it }, "Mobile Number (Optional)", keyboardType = KeyboardType.Phone)
             GlassTextField(empCode, { empCode = it }, "Employee / Staff Code (e.g., EMP012)")
-            GlassTextField(area, { area = it }, "Assigned Area / Ward (Optional)")
+            GlassTextField(area, { area = it }, "Assigned Area / Ward (Optional)", imeAction = ImeAction.Done)
         }
     }
 }
@@ -1321,7 +1322,7 @@ internal fun AppSettingsModal(
             }
             GlassTextField(key, { key = it }, "Setting Key")
             GlassTextField(value, { value = it }, "Setting Value")
-            GlassTextField(desc, { desc = it }, "Description")
+            GlassTextField(desc, { desc = it }, "Description", imeAction = ImeAction.Done)
         }
     }
 }

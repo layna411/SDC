@@ -3,7 +3,11 @@ package com.simats.sdc.presentation.screening
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -17,10 +21,39 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.simats.sdc.core.common.ClinicalConstants
 import com.simats.sdc.core.theme.OralCareColors
 import com.simats.sdc.data.dto.HabitItemDto
 import com.simats.sdc.presentation.components.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
+
+private suspend fun fetchPlaceName(context: Context, latitude: Double, longitude: Double): String? = withContext(Dispatchers.IO) {
+    try {
+        if (!Geocoder.isPresent()) return@withContext null
+        val geocoder = Geocoder(context, Locale.getDefault())
+        @Suppress("DEPRECATION")
+        val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+        val addr = addresses?.firstOrNull() ?: return@withContext null
+
+        val line = addr.getAddressLine(0)
+        if (!line.isNullOrBlank()) {
+            return@withContext line
+        }
+        val parts = listOfNotNull(
+            addr.featureName,
+            addr.subLocality,
+            addr.locality ?: addr.subAdminArea,
+            addr.adminArea,
+        ).filter { it.isNotBlank() }.distinct()
+        if (parts.isNotEmpty()) parts.joinToString(", ") else null
+    } catch (_: Exception) {
+        null
+    }
+}
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -29,23 +62,65 @@ fun Step1ConsentLocation(
     onUpdate: ((ScreeningWizardState) -> ScreeningWizardState) -> Unit,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    fun updateWithLocation(loc: Location) {
+        val lat = loc.latitude
+        val lng = loc.longitude
+        onUpdate {
+            it.copy(
+                locationPermissionGranted = true,
+                latitude = lat,
+                longitude = lng,
+                geolocationLabel = if (it.geolocationLabel.isBlank() || it.geolocationLabel.startsWith("GPS Captured") || it.geolocationLabel.startsWith("Screening Site (")) {
+                    "Detecting place name..."
+                } else it.geolocationLabel,
+            )
+        }
+        coroutineScope.launch {
+            val place = fetchPlaceName(context, lat, lng)
+            val finalName = place ?: "Screening Site (${String.format(Locale.US, "%.4f", lat)}, ${String.format(Locale.US, "%.4f", lng)})"
+            onUpdate {
+                it.copy(
+                    geolocationLabel = finalName,
+                )
+            }
+        }
+    }
+
+    fun requestLocationCapture() {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val loc = try {
+            lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                ?: lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+        } catch (_: SecurityException) {
+            null
+        }
+
+        if (loc != null) {
+            updateWithLocation(loc)
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    lm.getCurrentLocation(LocationManager.NETWORK_PROVIDER, null, context.mainExecutor) { freshLoc ->
+                        if (freshLoc != null) {
+                            updateWithLocation(freshLoc)
+                        }
+                    }
+                } catch (_: SecurityException) {}
+            }
+            onUpdate { it.copy(locationPermissionGranted = true) }
+        }
+    }
+
     val locationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
         val granted = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
-            val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            onUpdate {
-                it.copy(
-                    locationPermissionGranted = true,
-                    latitude = loc?.latitude,
-                    longitude = loc?.longitude,
-                    geolocationLabel = if (loc != null) "GPS Captured (${String.format("%.4f", loc.latitude)}, ${String.format("%.4f", loc.longitude)})" else "Location permission granted",
-                )
-            }
+            requestLocationCapture()
         }
     }
 
@@ -85,12 +160,18 @@ fun Step1ConsentLocation(
                     isPrimary = false,
                     icon = Icons.Default.MyLocation,
                     onClick = {
-                        locationLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        if (hasFine || hasCoarse) {
+                            requestLocationCapture()
+                        } else {
+                            locationLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                )
                             )
-                        )
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )

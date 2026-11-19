@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.simats.sdc.core.common.ClinicalConstants
 import com.simats.sdc.core.database.ScreeningDraftEntity
@@ -334,7 +335,14 @@ private fun ScreeningOutcomeResultScreen(
         else -> OralCareColors.WarningAmberBg
     }
 
-    Column(modifier = Modifier.fillMaxSize().navigationBarsPadding()) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
+            .imePadding()
+    ) {
         GlassHeader(
             title = "AI Screening Result",
             subtitle = result.screeningUid,
@@ -344,8 +352,9 @@ private fun ScreeningOutcomeResultScreen(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -479,7 +488,7 @@ private fun ScreeningOutcomeResultScreen(
                                 var selectedReview by remember { mutableStateOf(analysis.reviewStatus) }
                                 var notes by remember { mutableStateOf("") }
                                 GlassDropdown("Clinician Review Status", selectedReview, ClinicalConstants.AI_REVIEW_STATUSES, { selectedReview = it })
-                                GlassTextField(notes, { notes = it }, "Clinician Review Notes")
+                                GlassTextField(notes, { notes = it }, "Clinician Review Notes", imeAction = ImeAction.Done)
                                 GlassButton(
                                     text = "Save Clinician Review",
                                     onClick = { onReviewAi(analysis.id, img.id, selectedReview, notes) },
@@ -493,6 +502,7 @@ private fun ScreeningOutcomeResultScreen(
 
             GlassButton("View Patients List", onClick = onViewPatients, icon = Icons.Default.People, modifier = Modifier.fillMaxWidth())
             GlassButton("Start New Patient Screening", isPrimary = false, onClick = onStartAnother, icon = Icons.Default.Add, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(32.dp))
         }
     }
 }

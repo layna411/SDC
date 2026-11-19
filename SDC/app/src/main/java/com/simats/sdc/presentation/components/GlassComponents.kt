@@ -31,6 +31,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
@@ -404,6 +405,8 @@ fun GlassTextField(
                 .onFocusEvent { focusState ->
                     if (focusState.isFocused) {
                         coroutineScope.launch {
+                            delay(120)
+                            bringIntoViewRequester.bringIntoView()
                             delay(220)
                             bringIntoViewRequester.bringIntoView()
                         }
@@ -1199,18 +1202,28 @@ fun GlassDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+        modifier = Modifier
+            .fillMaxWidth(0.94f)
+            .padding(vertical = 16.dp)
+            .imePadding(),
         shape = OralCareTokens.DialogShape,
         containerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.96f) else Color.White.copy(alpha = 0.94f),
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
         text = {
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(scrollState),
             ) {
                 content()
+                Spacer(Modifier.height(8.dp))
             }
         },
         confirmButton = confirmButton,

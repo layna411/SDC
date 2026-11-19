@@ -1,4 +1,4 @@
-`package com.simats.sdc.presentation.navigation
+package com.simats.sdc.presentation.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
