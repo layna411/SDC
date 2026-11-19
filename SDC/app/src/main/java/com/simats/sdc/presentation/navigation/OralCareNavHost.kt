@@ -1,4 +1,4 @@
-package com.simats.sdc.presentation.navigation
+`package com.simats.sdc.presentation.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
@@ -301,6 +301,7 @@ private fun AuthenticatedRoleShell(
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
                             onFetchCollegeActivities = dashboardViewModel::getActivitiesForCollege,
+                            onErrorDismiss = dashboardViewModel::clearError,
                         )
                         "centers" -> CentersManagementScreen(
                             role = role,
@@ -312,6 +313,7 @@ private fun AuthenticatedRoleShell(
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
                             onFetchCenterActivities = dashboardViewModel::getActivitiesForCenter,
+                            onErrorDismiss = dashboardViewModel::clearError,
                         )
                         "organizers" -> OrganizersManagementScreen(
                             role = role,
@@ -322,6 +324,7 @@ private fun AuthenticatedRoleShell(
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
                             onFetchUserActivities = dashboardViewModel::getActivitiesForUser,
+                            onErrorDismiss = dashboardViewModel::clearError,
                         )
                         "users" -> UsersDirectoryScreen(
                             uiState = dashboardState,
@@ -332,6 +335,7 @@ private fun AuthenticatedRoleShell(
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },
                             onFetchUserActivities = dashboardViewModel::getActivitiesForUser,
+                            onErrorDismiss = dashboardViewModel::clearError,
                         )
                         "screenings" -> ScreeningsMonitorScreen(
                             uiState = dashboardState,

@@ -50,10 +50,16 @@ class DashboardViewModel @Inject constructor(
         return (repository.listActivities(centerId = centerId, limit = 40) as? RepoResult.Success)?.data ?: emptyList()
     }
 
-    fun loadDashboardForRole(role: String) {
+    fun loadDashboardForRole(role: String, preserveCredentials: Boolean = false) {
         viewModelScope.launch {
             // Immediately clear any old session or role state to prevent cross-login data leak
-            _uiState.value = DashboardUiState(isLoading = true)
+            val preservedBanner = if (preserveCredentials) _uiState.value.issuedCredentialBanner else null
+            val preservedCreds = if (preserveCredentials) _uiState.value.issuedCredentials else null
+            _uiState.value = DashboardUiState(
+                isLoading = true,
+                issuedCredentialBanner = preservedBanner,
+                issuedCredentials = preservedCreds,
+            )
             val dashRes = repository.getDashboard()
             if (dashRes is RepoResult.Error) {
                 _uiState.update { it.copy(isLoading = false, error = dashRes.message) }
@@ -102,6 +108,10 @@ class DashboardViewModel @Inject constructor(
         _uiState.update { it.copy(issuedCredentialBanner = null, issuedCredentials = null) }
     }
 
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
     fun createCollege(req: CollegeCreateDto, role: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -122,7 +132,7 @@ class DashboardViewModel @Inject constructor(
                         "College Created!\nAdmin Username: ${it.username}\nUser ID: ${it.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
                     } ?: "Dental College '${res.data.college.name}' created successfully."
                     _uiState.update { it.copy(issuedCredentialBanner = banner, issuedCredentials = creds) }
-                    loadDashboardForRole(role)
+                    loadDashboardForRole(role, preserveCredentials = true)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
             }
@@ -156,7 +166,7 @@ class DashboardViewModel @Inject constructor(
                         "Center Created!\nAdmin Username: ${it.username}\nUser ID: ${it.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
                     } ?: "Screening Center '${res.data.center.name}' created successfully."
                     _uiState.update { it.copy(issuedCredentialBanner = banner, issuedCredentials = creds) }
-                    loadDashboardForRole(role)
+                    loadDashboardForRole(role, preserveCredentials = true)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
             }
@@ -192,7 +202,7 @@ class DashboardViewModel @Inject constructor(
                         "Center credentials updated successfully."
                     }
                     _uiState.update { it.copy(isLoading = false, issuedCredentialBanner = banner, issuedCredentials = creds) }
-                    loadDashboardForRole(role)
+                    loadDashboardForRole(role, preserveCredentials = true)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
             }
@@ -215,7 +225,7 @@ class DashboardViewModel @Inject constructor(
                     )
                     val banner = "Health Organizer Assistant Created!\nUsername: ${u?.username ?: req.username}\nUser ID: ${u?.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
                     _uiState.update { it.copy(issuedCredentialBanner = banner, issuedCredentials = creds) }
-                    loadDashboardForRole(role)
+                    loadDashboardForRole(role, preserveCredentials = true)
                 }
                 is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
             }

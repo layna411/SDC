@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.simats.sdc.BuildConfig
@@ -48,6 +50,7 @@ fun CollegesManagementScreen(
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
     onFetchCollegeActivities: (suspend (Int) -> List<ActivityLogDto>)? = null,
+    onErrorDismiss: () -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -161,6 +164,37 @@ fun CollegesManagementScreen(
         )
     }
 
+    if (!uiState.error.isNullOrBlank()) {
+        GlassDialog(
+            title = "Action Failed",
+            onDismiss = onErrorDismiss,
+            confirmButton = { GlassButton("OK", onClick = onErrorDismiss) },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(OralCareColors.AbnormalRedBg)
+                    .border(BorderStroke(0.75.dp, Color(0xFFF8D7DA)), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = OralCareColors.AbnormalRed,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = uiState.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OralCareColors.AbnormalRed,
+                )
+            }
+        }
+    }
+
     if (showAddDialog) {
         AddCollegeModal(
             onDismiss = { showAddDialog = false },
@@ -180,6 +214,7 @@ fun CentersManagementScreen(
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
     onFetchCenterActivities: (suspend (Int) -> List<ActivityLogDto>)? = null,
+    onErrorDismiss: () -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -319,6 +354,37 @@ fun CentersManagementScreen(
         )
     }
 
+    if (!uiState.error.isNullOrBlank()) {
+        GlassDialog(
+            title = "Action Failed",
+            onDismiss = onErrorDismiss,
+            confirmButton = { GlassButton("OK", onClick = onErrorDismiss) },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(OralCareColors.AbnormalRedBg)
+                    .border(BorderStroke(0.75.dp, Color(0xFFF8D7DA)), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = OralCareColors.AbnormalRed,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = uiState.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OralCareColors.AbnormalRed,
+                )
+            }
+        }
+    }
+
     if (showAddDialog) {
         AddCenterModal(
             colleges = uiState.colleges,
@@ -339,6 +405,7 @@ fun OrganizersManagementScreen(
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
     onFetchUserActivities: (suspend (Int) -> List<ActivityLogDto>)? = null,
+    onErrorDismiss: () -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -451,6 +518,37 @@ fun OrganizersManagementScreen(
         )
     }
 
+    if (!uiState.error.isNullOrBlank()) {
+        GlassDialog(
+            title = "Action Failed",
+            onDismiss = onErrorDismiss,
+            confirmButton = { GlassButton("OK", onClick = onErrorDismiss) },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(OralCareColors.AbnormalRedBg)
+                    .border(BorderStroke(0.75.dp, Color(0xFFF8D7DA)), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = OralCareColors.AbnormalRed,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = uiState.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OralCareColors.AbnormalRed,
+                )
+            }
+        }
+    }
+
     if (showAddDialog) {
         AddOrganizerModal(
             centers = uiState.centers,
@@ -471,6 +569,7 @@ fun UsersDirectoryScreen(
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
     onFetchUserActivities: (suspend (Int) -> List<ActivityLogDto>)? = null,
+    onErrorDismiss: () -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
     var roleFilter by remember { mutableStateOf<String?>(null) }
@@ -638,6 +737,37 @@ fun UsersDirectoryScreen(
             fallbackBanner = uiState.issuedCredentialBanner,
             onDismiss = onDismissBanner,
         )
+    }
+
+    if (!uiState.error.isNullOrBlank()) {
+        GlassDialog(
+            title = "Action Failed",
+            onDismiss = onErrorDismiss,
+            confirmButton = { GlassButton("OK", onClick = onErrorDismiss) },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(OralCareColors.AbnormalRedBg)
+                    .border(BorderStroke(0.75.dp, Color(0xFFF8D7DA)), RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = OralCareColors.AbnormalRed,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = uiState.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OralCareColors.AbnormalRed,
+                )
+            }
+        }
     }
 
     if (showAddOrganizer) {
@@ -1206,13 +1336,13 @@ private fun DetailRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 3.dp),
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f, fill = false),
+            modifier = Modifier.weight(0.44f),
         ) {
             if (icon != null) {
                 Icon(
@@ -1224,9 +1354,11 @@ private fun DetailRow(
                 Spacer(Modifier.width(6.dp))
             }
             Text(
-                label,
+                text = label,
                 style = MaterialTheme.typography.bodySmall,
                 color = OralCareColors.TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         Spacer(Modifier.width(8.dp))
@@ -1235,6 +1367,10 @@ private fun DetailRow(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.SemiBold,
             color = valueColor,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(0.56f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -1334,7 +1470,10 @@ private fun ActivityHistoryList(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f),
+                            ) {
                                 StatusPill(
                                     text = act.action,
                                     bg = when (act.action.uppercase()) {
@@ -1354,14 +1493,17 @@ private fun ActivityHistoryList(
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    act.entityType + (act.entityId?.let { " #$it" } ?: ""),
+                                    text = act.entityType + (act.entityId?.let { " #$it" } ?: ""),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = OralCareColors.TextPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                act.createdAt?.replace("T", " ")?.take(16) ?: "",
+                                text = act.createdAt?.replace("T", " ")?.take(16) ?: "",
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
                                 color = OralCareColors.TextSecondary,
                             )
@@ -1369,10 +1511,12 @@ private fun ActivityHistoryList(
                         if (showUser && (!act.username.isNullOrBlank() || !act.userFullName.isNullOrBlank())) {
                             Spacer(Modifier.height(3.dp))
                             Text(
-                                "By: ${act.userFullName ?: act.username} (@${act.username ?: ""}) • ${act.role}",
+                                text = "By: ${act.userFullName ?: act.username} (@${act.username ?: ""}) • ${act.role}",
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                 color = OralCareColors.AccentBlueStrong,
                                 fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                         val detailStr = act.details?.toString()?.takeIf { it.isNotBlank() && it != "{}" }
@@ -1451,16 +1595,20 @@ fun CollegeDetailModal(
                     )
                 }
                 Spacer(Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         college.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         "Code: ${college.collegeCode}",
                         style = MaterialTheme.typography.bodySmall,
                         color = OralCareColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(4.dp))
                     StatusPill(
@@ -1512,7 +1660,15 @@ fun CollegeDetailModal(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(c.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                            Text(
+                                text = c.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.width(8.dp))
                             Text(c.centerCode, style = MaterialTheme.typography.bodySmall, color = OralCareColors.TextSecondary)
                         }
                     }
@@ -1584,16 +1740,20 @@ fun CenterDetailModal(
                     )
                 }
                 Spacer(Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         center.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         "Code: ${center.centerCode} • Hub: ${center.hubName ?: "General"}",
                         style = MaterialTheme.typography.bodySmall,
                         color = OralCareColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(4.dp))
                     StatusPill(
@@ -1646,7 +1806,15 @@ fun CenterDetailModal(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(s.fullName, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                            Text(
+                                text = s.fullName,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.width(8.dp))
                             Text(s.role.replace("_", " "), style = MaterialTheme.typography.bodySmall, color = OralCareColors.TextSecondary)
                         }
                     }
@@ -1722,19 +1890,26 @@ fun UserDetailModal(
                     )
                 }
                 Spacer(Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        user.fullName,
+                        text = user.fullName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        "@${user.username} • UID: ${user.userUid}",
+                        text = "@${user.username} • UID: ${user.userUid}",
                         style = MaterialTheme.typography.bodySmall,
                         color = OralCareColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(4.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         StatusPill(
                             text = user.role.replace("_", " "),
                             bg = OralCareColors.LightBlue,
@@ -1757,6 +1932,8 @@ fun UserDetailModal(
                     .border(BorderStroke(0.75.dp, Color(0xFFE2EDF7)), RoundedCornerShape(12.dp))
                     .padding(12.dp),
             ) {
+                DetailRow("Username", "@${user.username}", Icons.Default.AccountCircle)
+                DetailRow("User UID", user.userUid, Icons.Default.Badge)
                 DetailRow("Email", user.email ?: "Not configured", Icons.Default.Email)
                 DetailRow("Phone", user.phone ?: "Not configured", Icons.Default.Phone)
                 if (assignedCollege != null) {
