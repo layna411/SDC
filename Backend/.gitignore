@@ -23,6 +23,32 @@ env/
 storage_data/
 temp_storage/
 
+# AI / ML Models, Weights & Artifacts
+*.joblib
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.h5
+*.keras
+*.safetensors
+*.model
+app/ai/*.joblib
+app/ai/models/
+app/ai/weights/
+
+# Large Datasets & Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+SMART II Dataset*/
+SMART II Dataset.zip
+
 # Testing & Linting caches
 .pytest_cache/
 .mypy_cache/

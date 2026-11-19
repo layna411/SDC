@@ -89,6 +89,36 @@ htmlcov/
 .ruff_cache/
 
 # ------------------------------------------------------------------------------
+# AI / ML Models, Weights & Datasets
+# ------------------------------------------------------------------------------
+*.joblib
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.h5
+*.keras
+*.safetensors
+*.model
+Backend/app/ai/*.joblib
+Backend/app/ai/models/
+Backend/app/ai/weights/
+
+# Large Datasets & Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+SMART II Dataset*/
+SMART II Dataset.zip
+**/dataset/
+**/datasets/
+
+# ------------------------------------------------------------------------------
 # IDEs & Code Editors
 # ------------------------------------------------------------------------------
 # Android Studio / IntelliJ IDEA
