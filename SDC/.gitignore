@@ -1,0 +1,38 @@
+# Built application files & outputs
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Gradle build directories
+.gradle/
+build/
+**/build/
+!src/**/build/
+
+# Local SDK configuration
+local.properties
+
+# Android Studio / IntelliJ IDEA
+*.iml
+**/*.iml
+.idea/
+out/
+gen/
+
+# Android signing keys & credentials
+*.jks
+*.keystore
+release-key.properties
+signing.properties
+
+# Native build cache
+.externalNativeBuild/
+.cxx/
+captures/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
