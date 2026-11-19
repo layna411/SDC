@@ -69,7 +69,7 @@ fun CollegesManagementScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 0.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GlassSearchBar(query, { query = it }, "Search colleges by name, code, or city...")
@@ -183,7 +183,7 @@ fun CentersManagementScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 0.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GlassSearchBar(query, { query = it }, "Search centers by name, code, or hub...")
@@ -299,7 +299,7 @@ fun OrganizersManagementScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 0.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GlassSearchBar(query, { query = it }, "Search organizers by name, code, or area...")
@@ -413,7 +413,7 @@ fun UsersDirectoryScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 0.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             GlassSearchBar(query, { query = it }, "Search by name, username, or user ID...")
@@ -518,7 +518,7 @@ fun ScreeningsMonitorScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 0.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             GlassSearchBar(query, { query = it }, "Search by Screening ID or patient name...")

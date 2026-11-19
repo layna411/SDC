@@ -636,7 +636,7 @@ fun GlassBottomNavigation(
     modifier: Modifier = Modifier,
 ) {
     val isDark = MaterialTheme.colorScheme.background == OralCareColors.DarkBackground
-    val navShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    val navShape = androidx.compose.ui.graphics.RectangleShape
 
     Surface(
         shape = navShape,
@@ -644,10 +644,10 @@ fun GlassBottomNavigation(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 8.dp,
+                elevation = 4.dp,
                 shape = navShape,
-                ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.12f),
-                spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.08f),
+                ambientColor = Color.Black.copy(alpha = 0.04f),
+                spotColor = Color.Black.copy(alpha = 0.03f),
             )
             .clip(navShape)
             .background(
@@ -670,8 +670,8 @@ fun GlassBottomNavigation(
             )
             .border(
                 BorderStroke(
-                    width = 1.dp,
-                    color = if (isDark) OralCareColors.DarkBorder else Color(0xFFC0DEF8),
+                    width = 0.75.dp,
+                    color = if (isDark) OralCareColors.DarkBorder else Color(0xFFE4EFF8),
                 ),
                 shape = navShape,
             ),

@@ -2,8 +2,10 @@ package com.simats.sdc.presentation.reports
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
@@ -127,7 +129,12 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     FilterChip(selected = state.outcomeFilter == null, onClick = { viewModel.loadReport(null) }, label = { Text("All") })
                     FilterChip(selected = state.outcomeFilter == "NORMAL", onClick = { viewModel.loadReport("NORMAL") }, label = { Text("Normal") })
                     FilterChip(selected = state.outcomeFilter == "ABNORMAL", onClick = { viewModel.loadReport("ABNORMAL") }, label = { Text("Abnormal") })
@@ -232,21 +239,33 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                 if (rep != null) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Total Patients", rep.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f), OralCareColors.AccentBlueStrong)
-                                GlassStatCard("Male / Female", "${rep.malePatients} / ${rep.femalePatients}", Icons.Default.Wc, Modifier.weight(1f), OralCareColors.AccentBlue)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                GlassStatCard("Total Patients", rep.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f).fillMaxHeight(), OralCareColors.AccentBlueStrong)
+                                GlassStatCard("Male / Female", "${rep.malePatients} / ${rep.femalePatients}", Icons.Default.Wc, Modifier.weight(1f).fillMaxHeight(), OralCareColors.AccentBlue)
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Normal", rep.normalScreenings.toString(), Icons.Default.CheckCircle, Modifier.weight(1f), OralCareColors.NormalGreen)
-                                GlassStatCard("Abnormal", rep.abnormalScreenings.toString(), Icons.Default.Warning, Modifier.weight(1f), OralCareColors.AbnormalRed)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                GlassStatCard("Normal", rep.normalScreenings.toString(), Icons.Default.CheckCircle, Modifier.weight(1f).fillMaxHeight(), OralCareColors.NormalGreen)
+                                GlassStatCard("Abnormal", rep.abnormalScreenings.toString(), Icons.Default.Warning, Modifier.weight(1f).fillMaxHeight(), OralCareColors.AbnormalRed)
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Lesions", rep.lesionsDetected.toString(), Icons.Default.LocalHospital, Modifier.weight(1f), OralCareColors.AbnormalRed)
-                                GlassStatCard("Pending Reviews", rep.pendingReviews.toString(), Icons.Default.PendingActions, Modifier.weight(1f), OralCareColors.WarningAmber)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                GlassStatCard("Lesions", rep.lesionsDetected.toString(), Icons.Default.LocalHospital, Modifier.weight(1f).fillMaxHeight(), OralCareColors.AbnormalRed)
+                                GlassStatCard("Pending Reviews", rep.pendingReviews.toString(), Icons.Default.PendingActions, Modifier.weight(1f).fillMaxHeight(), OralCareColors.WarningAmber)
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Lab Reports", rep.labInvestigationsCount.toString(), Icons.Default.Biotech, Modifier.weight(1f), OralCareColors.TextPrimary)
-                                GlassStatCard("Follow-Ups", "${rep.followUpsScheduled} / ${rep.followUpsCompleted}", Icons.Default.EventAvailable, Modifier.weight(1f), OralCareColors.AccentBlueStrong, subtitle = "Scheduled / Done")
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                GlassStatCard("Lab Reports", rep.labInvestigationsCount.toString(), Icons.Default.Biotech, Modifier.weight(1f).fillMaxHeight(), OralCareColors.TextPrimary, subtitle = "Investigations")
+                                GlassStatCard("Follow-Ups", "${rep.followUpsScheduled} / ${rep.followUpsCompleted}", Icons.Default.EventAvailable, Modifier.weight(1f).fillMaxHeight(), OralCareColors.AccentBlueStrong, subtitle = "Scheduled / Done")
                             }
                         }
                     }
