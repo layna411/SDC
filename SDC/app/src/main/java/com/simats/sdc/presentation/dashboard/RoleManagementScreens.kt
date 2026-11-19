@@ -626,7 +626,7 @@ fun ProfileSettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 // Profile Identity Card
-                GlassCard(highlighted = true, contentPadding = PaddingValues(18.dp)) {
+                GlassCard(contentPadding = PaddingValues(18.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             contentAlignment = Alignment.Center,

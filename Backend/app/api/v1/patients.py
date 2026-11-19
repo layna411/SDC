@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
 
@@ -18,6 +18,7 @@ from app.schemas.patient_screening import (
     ScreeningDetailResponse,
 )
 from app.services.activity_service import log_activity
+from app.services.report_service import export_patient_report_pdf
 from app.services.screening_service import create_patient_record
 
 router = APIRouter(prefix="/patients", tags=["Patient Management"])
@@ -176,3 +177,55 @@ def get_patient_screenings(
         .all()
     )
     return [ScreeningDetailResponse.model_validate(s) for s in screenings]
+
+
+@router.get("/{patient_id}/report")
+def download_patient_report(
+    patient_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    patient = (
+        db.query(Patient)
+        .options(
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.consent_record),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.personal_history),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.habit_histories),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.medical_history),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.dental_history),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.clinical_findings),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.lesion_details),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.teeth_examinations),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.lab_investigation),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.patient_images),
+            joinedload(Patient.screenings).joinedload(ScreeningRecord.consultation_summary),
+        )
+        .filter(Patient.id == patient_id, Patient.is_deleted.is_(False))
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found.")
+    assert_patient_access(current_user, patient.college_id, patient.center_id, patient.assigned_organizer_id)
+
+    screenings = [s for s in (patient.screenings or []) if not s.is_deleted]
+    pdf_bytes = export_patient_report_pdf(patient, screenings)
+
+    log_activity(
+        db,
+        action="PATIENT_REPORT_DOWNLOADED",
+        entity_type="PATIENT",
+        entity_id=patient.patient_uid,
+        user=current_user,
+        college_id=patient.college_id,
+        center_id=patient.center_id,
+        ip_address=get_client_ip(request),
+        details={"screenings_count": len(screenings)},
+    )
+
+    filename = f"Patient_{patient.patient_uid}_Report.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

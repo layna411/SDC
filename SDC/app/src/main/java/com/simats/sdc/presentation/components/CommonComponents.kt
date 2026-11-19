@@ -287,112 +287,112 @@ fun ConfirmationDialog(
     ) {
         Text(message, style = MaterialTheme.typography.bodyMedium)
     }
-}
-
-@Composable
-fun ScreeningStatusBadge(outcome: String?, modifier: Modifier = Modifier) {
-    val (bg, fg, label) = when (outcome?.uppercase()) {
-        "NORMAL" -> Triple(OralCareColors.NormalGreenBg, OralCareColors.NormalGreen, "NORMAL")
-        "ABNORMAL" -> Triple(OralCareColors.AbnormalRedBg, OralCareColors.AbnormalRed, "ABNORMAL")
-        "PENDING_CLINICAL_REVIEW", "PENDING_REVIEW" -> Triple(OralCareColors.WarningAmberBg, OralCareColors.WarningAmber, "PENDING REVIEW")
-        else -> Triple(OralCareColors.LightBlue, OralCareColors.AccentBlueStrong, outcome ?: "DRAFT")
     }
-    Surface(
-        shape = OralCareTokens.BadgeShape,
-        color = bg,
-        border = BorderStroke(0.8.dp, fg.copy(alpha = 0.18f)),
-        modifier = modifier,
-    ) {
-        Text(
-            text = label,
-            color = fg,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        )
-    }
-}
 
-@Composable
-fun PatientCard(
-    patient: PatientDto,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    GlassCard(
-        modifier = modifier.fillMaxWidth(),
-        onClick = onClick,
-        contentPadding = PaddingValues(14.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+    @Composable
+    fun ScreeningStatusBadge(outcome: String?, modifier: Modifier = Modifier) {
+        val (bg, fg, label) = when (outcome?.uppercase()) {
+            "NORMAL" -> Triple(OralCareColors.NormalGreenBg, OralCareColors.NormalGreen, "NORMAL")
+            "ABNORMAL" -> Triple(OralCareColors.AbnormalRedBg, OralCareColors.AbnormalRed, "ABNORMAL")
+            "PENDING_CLINICAL_REVIEW", "PENDING_REVIEW" -> Triple(OralCareColors.WarningAmberBg, OralCareColors.WarningAmber, "PENDING REVIEW")
+            else -> Triple(OralCareColors.LightBlue, OralCareColors.AccentBlueStrong, outcome ?: "DRAFT")
+        }
+        Surface(
+            shape = OralCareTokens.BadgeShape,
+            color = bg,
+            border = BorderStroke(0.8.dp, fg.copy(alpha = 0.18f)),
+            modifier = modifier,
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(OralCareColors.LightBlue, OralCareColors.PastelBlue)))
-                    .border(1.2.dp, Color.White, CircleShape),
+            Text(
+                text = label,
+                color = fg,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            )
+        }
+    }
+
+    @Composable
+    fun PatientCard(
+        patient: PatientDto,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        GlassCard(
+            modifier = modifier.fillMaxWidth(),
+            onClick = onClick,
+            contentPadding = PaddingValues(14.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = patient.firstName.take(1).uppercase(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = OralCareColors.AccentBlueStrong,
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth(),
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(OralCareColors.LightBlue, OralCareColors.PastelBlue)))
+                        .border(1.2.dp, Color.White, CircleShape),
                 ) {
                     Text(
-                        text = patient.displayName,
+                        text = patient.firstName.take(1).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    ScreeningStatusBadge(patient.latestOutcome)
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${patient.patientUid} • ${patient.age}y • ${patient.sex}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(3.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = patient.phoneNumber,
-                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
                         color = OralCareColors.AccentBlueStrong,
                     )
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = patient.displayName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        ScreeningStatusBadge(patient.latestOutcome)
+                    }
+                    Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "${patient.totalScreenings} screening(s)",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "${patient.patientUid} • ${patient.age}y • ${patient.sex}",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (patient.latestLesionPresent == true) {
+                    Spacer(Modifier.height(3.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
                         Text(
-                            text = "Lesion Flagged",
+                            text = patient.phoneNumber,
                             style = MaterialTheme.typography.labelSmall,
-                            color = OralCareColors.AbnormalRed,
-                            fontWeight = FontWeight.SemiBold,
+                            color = OralCareColors.AccentBlueStrong,
                         )
+                        Text(
+                            text = "${patient.totalScreenings} screening(s)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (patient.latestLesionPresent == true) {
+                            Text(
+                                text = "Lesion Flagged",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OralCareColors.AbnormalRed,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 }
             }
-        }
     }
 }
 

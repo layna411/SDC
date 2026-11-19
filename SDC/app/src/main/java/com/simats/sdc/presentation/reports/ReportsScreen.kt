@@ -136,7 +136,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
             }
 
             item {
-                GlassCard(highlighted = true, contentPadding = PaddingValues(16.dp)) {
+                GlassCard(contentPadding = PaddingValues(16.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("Download Authorized Report", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -175,20 +175,24 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                             state.exportedFile?.let { file ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     TextButton(onClick = {
-                                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                        val viewIntent = Intent(Intent.ACTION_VIEW).apply {
-                                            setDataAndType(uri, state.exportedMimeType)
-                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                        }
-                                        val shareFallback = Intent(Intent.ACTION_SEND).apply {
-                                            type = state.exportedMimeType
-                                            putExtra(Intent.EXTRA_STREAM, uri)
-                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                        }
                                         runCatching {
-                                            context.startActivity(viewIntent)
-                                        }.onFailure {
-                                            context.startActivity(Intent.createChooser(shareFallback, "Open OralCare Report"))
+                                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                            val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                                                setDataAndType(uri, state.exportedMimeType)
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            val shareFallback = Intent(Intent.ACTION_SEND).apply {
+                                                type = state.exportedMimeType
+                                                putExtra(Intent.EXTRA_STREAM, uri)
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            runCatching {
+                                                context.startActivity(viewIntent)
+                                            }.onFailure {
+                                                context.startActivity(Intent.createChooser(shareFallback, "Open OralCare Report"))
+                                            }
+                                        }.onFailure { err ->
+                                            Toast.makeText(context, "Cannot open file: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
                                         }
                                     }) {
                                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, tint = OralCareColors.AccentBlueStrong, modifier = Modifier.size(16.dp))
@@ -196,13 +200,17 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                                         Text("Open File", color = OralCareColors.AccentBlueStrong, fontWeight = FontWeight.SemiBold)
                                     }
                                     TextButton(onClick = {
-                                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                            type = state.exportedMimeType
-                                            putExtra(Intent.EXTRA_STREAM, uri)
-                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        runCatching {
+                                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = state.exportedMimeType
+                                                putExtra(Intent.EXTRA_STREAM, uri)
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            context.startActivity(Intent.createChooser(shareIntent, "Share OralCare Report"))
+                                        }.onFailure { err ->
+                                            Toast.makeText(context, "Cannot share file: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
                                         }
-                                        context.startActivity(Intent.createChooser(shareIntent, "Share OralCare Report"))
                                     }) {
                                         Icon(Icons.Default.Share, contentDescription = null, tint = OralCareColors.AccentBlueStrong, modifier = Modifier.size(16.dp))
                                         Spacer(Modifier.width(4.dp))
@@ -225,7 +233,7 @@ fun ReportsScreen(viewModel: ReportsViewModel) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Total Patients", rep.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f), OralCareColors.AccentBlueStrong, highlighted = true)
+                                GlassStatCard("Total Patients", rep.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f), OralCareColors.AccentBlueStrong)
                                 GlassStatCard("Male / Female", "${rep.malePatients} / ${rep.femalePatients}", Icons.Default.Wc, Modifier.weight(1f), OralCareColors.AccentBlue)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -155,6 +155,13 @@ class ScreeningWizardViewModel @Inject constructor(
 
     fun goToStep(step: Int) {
         val clamped = step.coerceIn(1, 11)
+        if (clamped == 11) {
+            val step10Err = validateStep(_state.value, 10)
+            if (step10Err != null) {
+                _state.update { it.copy(currentStep = 10, validationError = step10Err) }
+                return
+            }
+        }
         _state.update { it.copy(currentStep = clamped, validationError = null) }
         autoSaveDraft()
     }
@@ -202,6 +209,14 @@ class ScreeningWizardViewModel @Inject constructor(
             else -> null
         }
         7 -> if (s.lesionPresent && s.lesions.isEmpty()) "Add at least one lesion entry or select Lesion Absent." else null
+        10 -> {
+            val allRegions = ClinicalConstants.ANATOMICAL_REGIONS
+            val uploadedNames = s.localImages.map { it.clinicalRegion.trim().lowercase() }.toSet()
+            val missing = allRegions.filter { it.name.trim().lowercase() !in uploadedNames }
+            if (missing.isNotEmpty()) {
+                "All 11 anatomical oral region photos are mandatory before proceeding to Consultation Summary. (${11 - missing.size}/11 uploaded. Next required: ${missing.first().name})"
+            } else null
+        }
         else -> null
     }
 
@@ -271,8 +286,9 @@ class ScreeningWizardViewModel @Inject constructor(
     }
 
     fun addCapturedImage(region: String, subRegion: String?, localPath: String) {
-        updateState {
-            it.copy(localImages = it.localImages + LocalCapturedImage(clinicalRegion = region, subRegion = subRegion, localPath = localPath))
+        updateState { s ->
+            val filtered = s.localImages.filterNot { it.clinicalRegion.equals(region, ignoreCase = true) }
+            s.copy(localImages = filtered + LocalCapturedImage(clinicalRegion = region, subRegion = subRegion, localPath = localPath))
         }
     }
 
@@ -457,6 +473,11 @@ class ScreeningWizardViewModel @Inject constructor(
         val step2Err = validateStep(s, 2)
         if (step2Err != null) {
             _state.update { it.copy(currentStep = 2, validationError = step2Err) }
+            return
+        }
+        val step10Err = validateStep(s, 10)
+        if (step10Err != null) {
+            _state.update { it.copy(currentStep = 10, validationError = step10Err) }
             return
         }
 

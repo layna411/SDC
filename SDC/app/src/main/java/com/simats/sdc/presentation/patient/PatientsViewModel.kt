@@ -1,5 +1,8 @@
 package com.simats.sdc.presentation.patient
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.sdc.core.datastore.SessionManager
@@ -10,6 +13,7 @@ import com.simats.sdc.domain.repository.RepoResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 data class PatientsUiState(
@@ -27,6 +31,10 @@ data class PatientsUiState(
     val isLoadingDetail: Boolean = false,
     val accessToken: String = "",
     val baseUrl: String = "",
+    val isDownloadingReport: Boolean = false,
+    val reportDownloadedFile: File? = null,
+    val reportError: String? = null,
+    val reportMessage: String? = null,
 )
 
 @HiltViewModel
@@ -93,7 +101,15 @@ class PatientsViewModel @Inject constructor(
     }
 
     fun openPatientDetail(patient: PatientDto) {
-        _uiState.update { it.copy(selectedPatient = patient, isLoadingDetail = true) }
+        _uiState.update {
+            it.copy(
+                selectedPatient = patient,
+                isLoadingDetail = true,
+                reportDownloadedFile = null,
+                reportMessage = null,
+                reportError = null,
+            )
+        }
         viewModelScope.launch {
             val freshPatient = (repository.getPatient(patient.id) as? RepoResult.Success)?.data ?: patient
             val scrRes = repository.getPatientScreenings(patient.id)
@@ -113,6 +129,90 @@ class PatientsViewModel @Inject constructor(
     }
 
     fun closePatientDetail() {
-        _uiState.update { it.copy(selectedPatient = null, patientScreenings = emptyList()) }
+        _uiState.update {
+            it.copy(
+                selectedPatient = null,
+                patientScreenings = emptyList(),
+                reportDownloadedFile = null,
+                reportMessage = null,
+                reportError = null,
+            )
+        }
+    }
+
+    fun downloadPatientReport(patient: PatientDto, screenings: List<ScreeningDetailDto>) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDownloadingReport = true, reportError = null, reportMessage = null) }
+            when (val res = repository.downloadPatientReport(patient, screenings)) {
+                is RepoResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isDownloadingReport = false,
+                            reportDownloadedFile = res.data,
+                            reportMessage = "Saved to Downloads/OralCare/${res.data.name}",
+                        )
+                    }
+                }
+                is RepoResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isDownloadingReport = false,
+                            reportError = res.message,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun sharePatientReport(context: Context, patient: PatientDto, screenings: List<ScreeningDetailDto>) {
+        viewModelScope.launch {
+            val existing = _uiState.value.reportDownloadedFile
+            val fileToShare = if (existing != null && existing.exists()) {
+                existing
+            } else {
+                _uiState.update { it.copy(isDownloadingReport = true, reportError = null) }
+                when (val res = repository.downloadPatientReport(patient, screenings)) {
+                    is RepoResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isDownloadingReport = false,
+                                reportDownloadedFile = res.data,
+                                reportMessage = "Saved to Downloads/OralCare/${res.data.name}",
+                            )
+                        }
+                        res.data
+                    }
+                    is RepoResult.Error -> {
+                        _uiState.update { it.copy(isDownloadingReport = false, reportError = res.message) }
+                        null
+                    }
+                }
+            }
+
+            if (fileToShare != null) {
+                runCatching {
+                    val uri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        fileToShare,
+                    )
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        putExtra(Intent.EXTRA_SUBJECT, "OralCare Report - ${patient.displayName} (${patient.patientUid})")
+                        putExtra(Intent.EXTRA_TEXT, "Detailed Clinical Screening Report for ${patient.displayName} (${patient.patientUid}) from Saveetha Dental College & Hospital.")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share OralCare Report"))
+                }.onFailure { err ->
+                    _uiState.update { it.copy(reportError = "Unable to share report: ${err.localizedMessage}") }
+                }
+            }
+        }
+    }
+
+    fun clearReportMessage() {
+        _uiState.update { it.copy(reportMessage = null, reportError = null) }
     }
 }

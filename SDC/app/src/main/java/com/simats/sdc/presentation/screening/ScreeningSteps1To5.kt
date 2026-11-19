@@ -97,7 +97,7 @@ fun Step1ConsentLocation(
             }
         }
 
-        GlassCard(highlighted = true, contentPadding = PaddingValues(14.dp)) {
+        GlassCard(contentPadding = PaddingValues(14.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Required Informed Consent Declarations", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = OralCareColors.TextPrimary)
                 CheckboxRow("Participant Information Sheet explained & acknowledged", state.participantInfoSheetAck) { c ->
@@ -168,7 +168,7 @@ fun Step3PersonalHistory(
             }
         }
 
-        GlassCard(highlighted = true, contentPadding = PaddingValues(16.dp)) {
+        GlassCard(contentPadding = PaddingValues(16.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Habit History (Tobacco / Arecanut / Alcohol / Others)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Text("If YES, Step 4 will collect structured habit frequency, duration, and usage details.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -254,7 +254,7 @@ fun Step4HabitHistory(
         }
 
         state.habits.forEachIndexed { idx, habit ->
-            GlassCard(highlighted = true, contentPadding = PaddingValues(14.dp)) {
+            GlassCard(contentPadding = PaddingValues(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,

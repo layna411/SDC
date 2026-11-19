@@ -122,7 +122,6 @@ fun FeedbackScreen(
                     value = "${state.averageRating} / 5.0",
                     icon = Icons.Default.Star,
                     accentColor = OralCareColors.WarningAmber,
-                    highlighted = true,
                     subtitle = "Based on ${state.totalCount} feedback record(s)",
                     modifier = Modifier.fillMaxWidth(),
                 )

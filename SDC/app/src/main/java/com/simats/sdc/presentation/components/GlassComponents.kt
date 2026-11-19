@@ -83,7 +83,13 @@ fun GlassBackground(
                 if (isDark) {
                     Brush.verticalGradient(listOf(OralCareColors.DarkBackground, OralCareColors.DarkSurface))
                 } else {
-                    OralCareColors.BackgroundGradient
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFFF4F9FF),
+                            Color(0xFFE9F3FC),
+                            Color(0xFFF2F8FF),
+                        )
+                    )
                 }
             ),
     ) {
@@ -92,64 +98,54 @@ fun GlassBackground(
             val h = size.height
 
             if (!isDark) {
-                // Soft pastel blue radial glow (top-right)
+                // Soft, balanced atmospheric glow at top (centered across width)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(OralCareColors.PastelBlue.copy(alpha = 0.52f), Color.Transparent),
-                        center = Offset(w * 0.88f, h * 0.08f),
-                        radius = w * 0.62f,
+                        colors = listOf(OralCareColors.PastelBlue.copy(alpha = 0.22f), Color.Transparent),
+                        center = Offset(w * 0.5f, 0f),
+                        radius = w * 0.85f,
                     ),
-                    radius = w * 0.62f,
-                    center = Offset(w * 0.88f, h * 0.08f),
+                    radius = w * 0.85f,
+                    center = Offset(w * 0.5f, 0f),
                 )
-                // Soft translucent circle (mid-left)
+                // Soft, balanced atmospheric glow at bottom (centered across width)
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(OralCareColors.LightBlue.copy(alpha = 0.65f), Color.Transparent),
-                        center = Offset(w * 0.10f, h * 0.42f),
-                        radius = w * 0.55f,
+                        colors = listOf(OralCareColors.LightBlue.copy(alpha = 0.25f), Color.Transparent),
+                        center = Offset(w * 0.5f, h),
+                        radius = w * 0.85f,
                     ),
-                    radius = w * 0.55f,
-                    center = Offset(w * 0.10f, h * 0.42f),
+                    radius = w * 0.85f,
+                    center = Offset(w * 0.5f, h),
                 )
-                // Delicate pastel glow (bottom-right)
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(OralCareColors.SoftBlue.copy(alpha = 0.35f), Color.Transparent),
-                        center = Offset(w * 0.85f, h * 0.86f),
-                        radius = w * 0.58f,
-                    ),
-                    radius = w * 0.58f,
-                    center = Offset(w * 0.85f, h * 0.86f),
-                )
-                // Very subtle abstract white-blue flowing curve
+                // Delicate flowing glass curve lines with soft transparency
                 val curve = Path().apply {
                     moveTo(0f, h * 0.22f)
-                    cubicTo(w * 0.32f, h * 0.14f, w * 0.68f, h * 0.30f, w, h * 0.19f)
+                    cubicTo(w * 0.32f, h * 0.16f, w * 0.68f, h * 0.28f, w, h * 0.20f)
                 }
                 drawPath(
                     path = curve,
-                    color = Color.White.copy(alpha = 0.55f),
-                    style = Stroke(width = 3.dp.toPx()),
+                    color = Color.White.copy(alpha = 0.40f),
+                    style = Stroke(width = 2.5.dp.toPx()),
                 )
                 val lowerCurve = Path().apply {
                     moveTo(0f, h * 0.74f)
-                    cubicTo(w * 0.36f, h * 0.68f, w * 0.66f, h * 0.82f, w, h * 0.71f)
+                    cubicTo(w * 0.36f, h * 0.70f, w * 0.66f, h * 0.80f, w, h * 0.73f)
                 }
                 drawPath(
                     path = lowerCurve,
-                    color = OralCareColors.PastelBlue.copy(alpha = 0.38f),
+                    color = OralCareColors.PastelBlue.copy(alpha = 0.24f),
                     style = Stroke(width = 2.dp.toPx()),
                 )
             } else {
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(OralCareColors.AccentBlue.copy(alpha = 0.14f), Color.Transparent),
-                        center = Offset(w * 0.85f, h * 0.1f),
-                        radius = w * 0.6f,
+                        center = Offset(w * 0.5f, 0f),
+                        radius = w * 0.8f,
                     ),
-                    radius = w * 0.6f,
-                    center = Offset(w * 0.85f, h * 0.1f),
+                    radius = w * 0.8f,
+                    center = Offset(w * 0.5f, 0f),
                 )
             }
         }
@@ -178,22 +174,21 @@ fun GlassCard(
     val bgBrush = when {
         containerColor != null -> Brush.verticalGradient(listOf(containerColor, containerColor))
         isDark -> Brush.verticalGradient(listOf(OralCareColors.DarkCard, OralCareColors.DarkSurface))
-        highlighted -> OralCareColors.HighlightCardGradient
         else -> OralCareColors.CardSurfaceGradient
     }
 
     val resolvedBorder = borderColor ?: when {
         isDark -> OralCareColors.DarkBorder
-        highlighted -> Color(0xFFADD4F5)
-        else -> Color(0xFFD6E9FA)
+        highlighted -> Color(0xFF98CBF7)
+        else -> Color(0xFFC0DEF8)
     }
 
     val baseModifier = modifier
         .shadow(
-            elevation = if (isDark) 2.dp else if (highlighted) 3.dp else 2.dp,
+            elevation = if (isDark) 2.dp else 2.dp,
             shape = shape,
-            ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.14f),
-            spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.12f),
+            ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.08f),
+            spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.06f),
         )
         .clip(shape)
         .background(bgBrush, shape)
@@ -222,6 +217,8 @@ fun GlassButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     icon: ImageVector? = null,
+    fontSize: androidx.compose.ui.unit.TextUnit = 13.sp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -252,14 +249,14 @@ fun GlassButton(
         !enabled -> BorderStroke(1.dp, Color(0xFFD2E4F4))
         isPrimary -> BorderStroke(1.dp, Color.White.copy(alpha = 0.28f))
         isDark -> BorderStroke(1.dp, OralCareColors.DarkBorder)
-        else -> BorderStroke(1.25.dp, Color(0xFFA7D2F4))
+        else -> BorderStroke(1.2.dp, Color(0xFF90C5F2))
     }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .scale(scale)
-            .heightIn(min = 50.dp)
+            .heightIn(min = 46.dp)
             .then(
                 if (isPrimary && enabled) {
                     Modifier.shadow(
@@ -267,6 +264,13 @@ fun GlassButton(
                         shape = shape,
                         ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.25f),
                         spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.30f),
+                    )
+                } else if (enabled) {
+                    Modifier.shadow(
+                        elevation = 1.5.dp,
+                        shape = shape,
+                        ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.08f),
+                        spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.06f),
                     )
                 } else {
                     Modifier
@@ -281,7 +285,7 @@ fun GlassButton(
                 indication = ripple(color = if (isPrimary) Color.White else OralCareColors.AccentBlueStrong),
                 onClick = onClick,
             )
-            .padding(horizontal = 18.dp, vertical = 13.dp),
+            .padding(contentPadding),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -293,15 +297,15 @@ fun GlassButton(
                     strokeWidth = 2.dp,
                     color = contentColor,
                 )
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(8.dp))
             } else if (icon != null) {
                 Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(6.dp))
             }
             Text(
                 text = text,
                 color = contentColor,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = fontSize),
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -520,12 +524,22 @@ fun GlassHeader(
     val isDark = MaterialTheme.colorScheme.background == OralCareColors.DarkBackground
     val shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
 
-    Surface(
-        shape = shape,
-        color = if (isDark) OralCareColors.DarkSurface else Color(0xFFF8FCFF),
-        border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else Color(0xFFD7EBFA)),
-        shadowElevation = 0.dp,
-        modifier = modifier.fillMaxWidth(),
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 2.dp,
+                shape = shape,
+                ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.08f),
+                spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.06f),
+            )
+            .clip(shape)
+            .background(
+                if (isDark) Brush.verticalGradient(listOf(OralCareColors.DarkSurface, OralCareColors.DarkCard))
+                else OralCareColors.HeaderGradient,
+                shape,
+            )
+            .border(BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else Color(0xFFC0DEF8)), shape),
     ) {
         Row(
             modifier = Modifier
@@ -758,7 +772,6 @@ fun GlassProgressIndicator(
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        highlighted = true,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
     ) {
         Row(
@@ -860,7 +873,8 @@ fun GlassImageCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(OralCareTokens.CardShape)
-            .background(Color.White.copy(alpha = 0.74f)),
+            .background(OralCareColors.CardSurfaceGradient, OralCareTokens.CardShape)
+            .border(1.dp, Color(0xFFC0DEF8), OralCareTokens.CardShape),
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
             drawRoundRect(

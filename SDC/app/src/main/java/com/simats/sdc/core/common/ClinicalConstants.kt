@@ -1,10 +1,14 @@
 package com.simats.sdc.core.common
 
+import androidx.annotation.DrawableRes
+import com.simats.sdc.R
+
 data class AnatomicalRegionSpec(
     val code: String,
     val name: String,
     val subRegions: List<String>,
     val referenceGuide: String,
+    @DrawableRes val drawableRes: Int = R.drawable.step6_tongue,
 )
 
 object ClinicalConstants {
@@ -42,18 +46,24 @@ object ClinicalConstants {
     )
 
     val ANATOMICAL_REGIONS = listOf(
-        AnatomicalRegionSpec("LABIAL_MUCOSA", "Labial Mucosa", listOf("Upper", "Lower"), "Retract upper and lower lips gently to inspect inner labial mucosa and vestibule."),
-        AnatomicalRegionSpec("BUCCAL_MUCOSA", "Buccal Mucosa", listOf("Right", "Left"), "Use mouth mirror to inspect right and left cheeks from commissure to retromolar trigone."),
-        AnatomicalRegionSpec("PALATAL_MUCOSA", "Palatal Mucosa", listOf("Hard Palate", "Soft Palate"), "Inspect anterior rugae, hard palate vault, and mobile soft palate."),
-        AnatomicalRegionSpec("ALVEOLAR_MUCOSA", "Alveolar Mucosa", listOf("Right", "Left"), "Examine maxillary and mandibular alveolar ridges and gingiva bilaterally."),
-        AnatomicalRegionSpec("TONGUE", "Tongue", listOf("Dorsal", "Lateral", "Ventral", "Anterior", "Posterior", "Right", "Left"), "Inspect dorsum, grasp gently with gauze to inspect lateral borders and ventral surface."),
-        AnatomicalRegionSpec("FLOOR_OF_MOUTH", "Floor of the Mouth", listOf("General"), "Ask patient to touch palate with tongue tip; examine sublingual area and Wharton's duct."),
-        AnatomicalRegionSpec("PALATINE_TONSIL", "Palatine Tonsil", listOf("Right", "Left"), "Depress posterior tongue gently to inspect tonsillar fossae bilaterally."),
-        AnatomicalRegionSpec("PILLAR_OF_FAUCES", "Pillar of Fauces", listOf("Anterior", "Posterior"), "Evaluate anterior palatoglossal and posterior palatopharyngeal arches."),
-        AnatomicalRegionSpec("FRENIAL_ATTACHMENT", "Frenial Attachment", listOf("Maxillary", "Lingual", "Lower"), "Check maxillary labial, lingual, and lower labial frenum attachments."),
-        AnatomicalRegionSpec("ANGLE_OF_MOUTH", "Angle of the Mouth", listOf("Right", "Left"), "Inspect oral commissures bilaterally for fissuring, maceration, or plaques."),
-        AnatomicalRegionSpec("LIP_VERMILLION_BORDER", "Lip and Vermillion Border", listOf("Upper", "Lower"), "Examine upper and lower vermillion zones and mucocutaneous junction."),
+        AnatomicalRegionSpec("LABIAL_MUCOSA", "Labial Mucosa", listOf("Upper", "Lower"), "Retract upper and lower lips gently to inspect inner labial mucosa and vestibule.", R.drawable.step6_labial_mucosa),
+        AnatomicalRegionSpec("BUCCAL_MUCOSA", "Buccal Mucosa", listOf("Right", "Left"), "Use mouth mirror to inspect right and left cheeks from commissure to retromolar trigone.", R.drawable.step6_buccal_mucosa),
+        AnatomicalRegionSpec("PALATAL_MUCOSA", "Palatal Mucosa", listOf("Hard Palate", "Soft Palate"), "Inspect anterior rugae, hard palate vault, and mobile soft palate.", R.drawable.step6_palatal_mucosa),
+        AnatomicalRegionSpec("ALVEOLAR_MUCOSA", "Alveolar Mucosa", listOf("Right", "Left"), "Examine maxillary and mandibular alveolar ridges and gingiva bilaterally.", R.drawable.step6_alveolar_mucosa),
+        AnatomicalRegionSpec("TONGUE", "Tongue", listOf("Dorsal", "Lateral", "Ventral", "Anterior", "Posterior", "Right", "Left"), "Inspect dorsum, grasp gently with gauze to inspect lateral borders and ventral surface.", R.drawable.step6_tongue),
+        AnatomicalRegionSpec("FLOOR_OF_MOUTH", "Floor of the Mouth", listOf("General"), "Ask patient to touch palate with tongue tip; examine sublingual area and Wharton's duct.", R.drawable.step6_floor_of_mouth),
+        AnatomicalRegionSpec("PALATINE_TONSIL", "Palatine Tonsil", listOf("Right", "Left"), "Depress posterior tongue gently to inspect tonsillar fossae bilaterally.", R.drawable.step6_palatine_tonsil),
+        AnatomicalRegionSpec("PILLAR_OF_FAUCES", "Pillar of Fauces", listOf("Anterior", "Posterior"), "Evaluate anterior palatoglossal and posterior palatopharyngeal arches.", R.drawable.step6_pillar_of_fauces),
+        AnatomicalRegionSpec("FRENIAL_ATTACHMENT", "Frenial Attachment", listOf("Maxillary", "Lingual", "Lower"), "Check maxillary labial, lingual, and lower labial frenum attachments.", R.drawable.step6_frenial_attachment),
+        AnatomicalRegionSpec("ANGLE_OF_MOUTH", "Angle of the Mouth", listOf("Right", "Left"), "Inspect oral commissures bilaterally for fissuring, maceration, or plaques.", R.drawable.step6_angle_of_mouth),
+        AnatomicalRegionSpec("LIP_VERMILLION_BORDER", "Lip and Vermillion Border", listOf("Upper", "Lower"), "Examine upper and lower vermillion zones and mucocutaneous junction.", R.drawable.step6_lip_vermillion_border),
     )
+
+    fun getRegionSpecByName(name: String?): AnatomicalRegionSpec =
+        ANATOMICAL_REGIONS.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: ANATOMICAL_REGIONS.first()
+
+    fun getRegionSpecByCode(code: String?): AnatomicalRegionSpec =
+        ANATOMICAL_REGIONS.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: ANATOMICAL_REGIONS.first()
 
     val CLINICAL_OBSERVATION_OPTIONS = listOf(
         "WHITE_PATCH" to "White patch / plaque observation",

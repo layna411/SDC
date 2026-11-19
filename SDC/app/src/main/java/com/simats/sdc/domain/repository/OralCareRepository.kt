@@ -22,6 +22,7 @@ interface OralCareRepository {
     suspend fun getDashboard(): RepoResult<DashboardStatsDto>
     suspend fun getReportAnalytics(startDate: String?, endDate: String?, outcome: String?): RepoResult<ReportAnalyticsDto>
     suspend fun downloadReport(format: String, startDate: String?, endDate: String?, outcome: String?): RepoResult<File>
+    suspend fun downloadPatientReport(patient: PatientDto, screenings: List<ScreeningDetailDto>): RepoResult<File>
 
     // Organization Management
     suspend fun listUsers(role: String? = null): RepoResult<List<UserDto>>

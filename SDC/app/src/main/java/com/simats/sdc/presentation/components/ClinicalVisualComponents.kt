@@ -1,6 +1,6 @@
 package com.simats.sdc.presentation.components
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,23 +8,31 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.simats.sdc.core.common.ClinicalConstants
 import com.simats.sdc.core.theme.OralCareColors
 import com.simats.sdc.core.theme.OralCareTokens
@@ -55,8 +63,8 @@ fun WeeklyScreeningChart(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(OralCareTokens.InputShape)
-                .background(OralCareColors.SecondaryBackground.copy(alpha = 0.65f))
-                .border(1.dp, Color.White.copy(alpha = 0.8f), OralCareTokens.InputShape)
+                .background(Brush.verticalGradient(listOf(Color(0x66DDEEFF), Color(0x33EAF4FD))))
+                .border(1.dp, Color(0x66B6D9F5), OralCareTokens.InputShape)
                 .padding(horizontal = 8.dp, vertical = 14.dp),
         ) {
             Row(
@@ -111,109 +119,205 @@ fun AnatomicalReferenceDiagram(
     guideText: String,
     modifier: Modifier = Modifier,
 ) {
+    val spec = remember(regionCode, regionName) {
+        ClinicalConstants.ANATOMICAL_REGIONS.firstOrNull { it.code.equals(regionCode, ignoreCase = true) }
+            ?: ClinicalConstants.getRegionSpecByName(regionName)
+    }
+    var showZoomDialog by remember { mutableStateOf(false) }
+
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        highlighted = true,
-        contentPadding = PaddingValues(14.dp),
+        contentPadding = PaddingValues(16.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(
-                modifier = Modifier
-                    .size(76.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.92f))
-                    .border(1.dp, OralCareColors.PastelBlue, RoundedCornerShape(16.dp))
-                    .padding(6.dp),
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Header Row with Region title and zoom action
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                val w = size.width
-                val h = size.height
-                drawOval(
-                    color = Color(0xFFF7D1D1),
-                    topLeft = Offset(w * 0.08f, h * 0.14f),
-                    size = Size(w * 0.84f, h * 0.72f),
-                )
-                drawOval(
-                    color = Color(0xFFB85454),
-                    topLeft = Offset(w * 0.18f, h * 0.24f),
-                    size = Size(w * 0.64f, h * 0.52f),
-                )
-                drawRoundRect(
-                    color = Color.White,
-                    topLeft = Offset(w * 0.24f, h * 0.26f),
-                    size = Size(w * 0.52f, h * 0.12f),
-                    cornerRadius = CornerRadius(6f, 6f),
-                )
-                drawOval(
-                    color = Color(0xFFEA8B8B),
-                    topLeft = Offset(w * 0.28f, h * 0.50f),
-                    size = Size(w * 0.44f, h * 0.22f),
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = OralCareColors.LightBlue,
+                    ) {
+                        Text(
+                            text = "Reference Photo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = OralCareColors.AccentBlueStrong,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = regionName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = OralCareColors.TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                IconButton(
+                    onClick = { showZoomDialog = true },
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ZoomIn,
+                        contentDescription = "Enlarge photo",
+                        tint = OralCareColors.AccentBlueStrong,
+                    )
+                }
+            }
+
+            // Real Clinical Reference Photo from Step 6 folder
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF0F1E2E))
+                    .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(14.dp))
+                    .clickable { showZoomDialog = true },
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = spec.drawableRes),
+                    contentDescription = "Clinical reference photograph of $regionName",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
                 )
 
-                val highlight = OralCareColors.AccentBlueStrong
-                when (regionCode) {
-                    "LABIAL_MUCOSA", "LIP_VERMILLION_BORDER" -> drawOval(
-                        color = highlight,
-                        topLeft = Offset(w * 0.08f, h * 0.14f),
-                        size = Size(w * 0.84f, h * 0.72f),
-                        style = Stroke(width = 4f),
-                    )
-                    "BUCCAL_MUCOSA" -> {
-                        drawCircle(highlight, radius = w * 0.1f, center = Offset(w * 0.18f, h * 0.5f))
-                        drawCircle(highlight, radius = w * 0.1f, center = Offset(w * 0.82f, h * 0.5f))
-                    }
-                    "PALATAL_MUCOSA" -> drawOval(
-                        color = highlight.copy(alpha = 0.78f),
-                        topLeft = Offset(w * 0.30f, h * 0.30f),
-                        size = Size(w * 0.40f, h * 0.18f),
-                    )
-                    "ALVEOLAR_MUCOSA" -> drawRoundRect(
-                        color = highlight,
-                        topLeft = Offset(w * 0.22f, h * 0.24f),
-                        size = Size(w * 0.56f, h * 0.16f),
-                        cornerRadius = CornerRadius(8f, 8f),
-                        style = Stroke(width = 3.5f),
-                    )
-                    "TONGUE" -> drawOval(
-                        color = highlight.copy(alpha = 0.82f),
-                        topLeft = Offset(w * 0.28f, h * 0.50f),
-                        size = Size(w * 0.44f, h * 0.22f),
-                    )
-                    "FLOOR_OF_MOUTH" -> drawRoundRect(
-                        color = highlight,
-                        topLeft = Offset(w * 0.30f, h * 0.66f),
-                        size = Size(w * 0.40f, h * 0.10f),
-                        cornerRadius = CornerRadius(4f, 4f),
-                    )
-                    "PALATINE_TONSIL", "PILLAR_OF_FAUCES" -> {
-                        drawCircle(highlight, radius = w * 0.08f, center = Offset(w * 0.34f, h * 0.44f))
-                        drawCircle(highlight, radius = w * 0.08f, center = Offset(w * 0.66f, h * 0.44f))
-                    }
-                    "FRENIAL_ATTACHMENT" -> drawLine(
-                        color = highlight,
-                        start = Offset(w * 0.50f, h * 0.18f),
-                        end = Offset(w * 0.50f, h * 0.78f),
-                        strokeWidth = 4f,
-                    )
-                    "ANGLE_OF_MOUTH" -> {
-                        drawCircle(highlight, radius = w * 0.09f, center = Offset(w * 0.10f, h * 0.50f))
-                        drawCircle(highlight, radius = w * 0.09f, center = Offset(w * 0.90f, h * 0.50f))
+                // Bottom subtle hint banner
+                Surface(
+                    shape = RoundedCornerShape(topStart = 8.dp),
+                    color = Color.Black.copy(alpha = 0.65f),
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.TouchApp,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "Tap to enlarge",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                        )
                     }
                 }
             }
-            Spacer(Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = regionName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = OralCareColors.TextPrimary,
-                    fontWeight = FontWeight.Bold,
+
+            // Clinical Examination Guidance Box
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x33DDEEFF))
+                    .border(1.dp, Color(0x66B6D9F5), RoundedCornerShape(10.dp))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = OralCareColors.AccentBlueStrong,
+                    modifier = Modifier.size(18.dp).padding(top = 2.dp),
                 )
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    text = guideText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = OralCareColors.TextSecondary,
-                )
+                Spacer(Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Examination Protocol",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = OralCareColors.AccentBlueStrong,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = guideText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OralCareColors.TextPrimary,
+                    )
+                }
+            }
+        }
+    }
+
+    // Full-screen enlargement dialog
+    if (showZoomDialog) {
+        Dialog(
+            onDismissRequest = { showZoomDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color.White,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .border(1.5.dp, Color(0xFFC0DEF8), RoundedCornerShape(20.dp)),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column {
+                            Text(
+                                text = "Clinical Reference: $regionName",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = OralCareColors.TextPrimary,
+                            )
+                            Text(
+                                text = "Saveetha Dental College Reference Standard",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OralCareColors.TextSecondary,
+                            )
+                        }
+                        IconButton(onClick = { showZoomDialog = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = OralCareColors.TextPrimary)
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(340.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF0F1E2E)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            painter = painterResource(id = spec.drawableRes),
+                            contentDescription = regionName,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    Text(
+                        text = guideText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = OralCareColors.TextPrimary,
+                    )
+
+                    GlassButton(
+                        text = "Close Preview",
+                        onClick = { showZoomDialog = false },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }

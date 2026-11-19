@@ -83,7 +83,6 @@ fun HealthOrganizerHomeScreen(
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                highlighted = true,
                 contentPadding = PaddingValues(18.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -119,7 +118,7 @@ fun HealthOrganizerHomeScreen(
                 SectionHeader(title = "Quick Statistics", subtitle = "Your assigned screening overview")
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    GlassStatCard("Total Patients", stats.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f), OralCareColors.AccentBlueStrong, highlighted = true)
+                    GlassStatCard("Total Patients", stats.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f), OralCareColors.AccentBlueStrong)
                     GlassStatCard("Screenings", stats.totalScreenings.toString(), Icons.Default.MedicalServices, Modifier.weight(1f), OralCareColors.NormalGreen)
                 }
                 Spacer(Modifier.height(12.dp))
@@ -359,7 +358,7 @@ fun AdminRoleDashboardScreen(
                     when (role) {
                         "SUPER_ADMIN" -> {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Dental Colleges", stats.totalColleges.toString(), Icons.Default.AccountBalance, Modifier.weight(1f), OralCareColors.AccentBlueStrong, highlighted = true)
+                                GlassStatCard("Dental Colleges", stats.totalColleges.toString(), Icons.Default.AccountBalance, Modifier.weight(1f), OralCareColors.AccentBlueStrong)
                                 GlassStatCard("Centers", stats.totalCenters.toString(), Icons.Default.LocalHospital, Modifier.weight(1f), OralCareColors.AccentBlue)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -369,7 +368,7 @@ fun AdminRoleDashboardScreen(
                         }
                         "COLLEGE_ADMIN" -> {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Centers", stats.totalCenters.toString(), Icons.Default.LocalHospital, Modifier.weight(1f), OralCareColors.AccentBlueStrong, highlighted = true)
+                                GlassStatCard("Centers", stats.totalCenters.toString(), Icons.Default.LocalHospital, Modifier.weight(1f), OralCareColors.AccentBlueStrong)
                                 GlassStatCard("Organizers", stats.totalOrganizers.toString(), Icons.Default.Badge, Modifier.weight(1f), OralCareColors.AccentBlue)
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -379,7 +378,7 @@ fun AdminRoleDashboardScreen(
                         }
                         else -> {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                GlassStatCard("Organizers", stats.totalOrganizers.toString(), Icons.Default.Badge, Modifier.weight(1f), OralCareColors.AccentBlueStrong, highlighted = true)
+                                GlassStatCard("Organizers", stats.totalOrganizers.toString(), Icons.Default.Badge, Modifier.weight(1f), OralCareColors.AccentBlueStrong)
                                 GlassStatCard("Total Patients", stats.totalPatients.toString(), Icons.Default.People, Modifier.weight(1f), OralCareColors.AccentBlue)
                             }
                         }
@@ -404,7 +403,6 @@ fun AdminRoleDashboardScreen(
             item {
                 GlassCard(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    highlighted = true,
                     contentPadding = PaddingValues(16.dp),
                 ) {
                     Text("Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

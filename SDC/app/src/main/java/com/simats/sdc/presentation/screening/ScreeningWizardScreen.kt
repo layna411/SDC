@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -184,13 +188,20 @@ fun ScreeningWizardScreen(
             Spacer(Modifier.height(10.dp))
         }
 
-        // Clean Glass Step Action Bar (respects system nav bar insets when bottom nav is hidden)
-        Surface(
-            shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
-            color = Color(0xFFF8FCFF),
-            border = BorderStroke(1.dp, Color(0xFFD5E9FA)),
-            shadowElevation = 0.dp,
-            modifier = Modifier.fillMaxWidth(),
+        // Clean Frosted Glass Step Action Bar (respects system nav bar insets when bottom nav is hidden)
+        val bottomBarShape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(
+                    elevation = 4.dp,
+                    shape = bottomBarShape,
+                    ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.10f),
+                    spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.08f),
+                )
+                .clip(bottomBarShape)
+                .background(OralCareColors.HeaderGradient, bottomBarShape)
+                .border(BorderStroke(1.dp, Color(0xFFC0DEF8)), bottomBarShape),
         ) {
             Row(
                 modifier = Modifier

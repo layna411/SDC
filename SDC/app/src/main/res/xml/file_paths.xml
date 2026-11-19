@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <cache-path name="clinical_captures" path="clinical_captures/" />
-    <files-path name="clinical_images" path="clinical_images/" />
+    <files-path name="all_files" path="." />
+    <files-path name="patient_reports" path="patient_reports/" />
     <files-path name="reports" path="reports/" />
+    <files-path name="clinical_images" path="clinical_images/" />
+    <cache-path name="all_cache" path="." />
+    <cache-path name="clinical_captures" path="clinical_captures/" />
+    <external-files-path name="external_files" path="." />
+    <external-cache-path name="external_cache" path="." />
 </paths>

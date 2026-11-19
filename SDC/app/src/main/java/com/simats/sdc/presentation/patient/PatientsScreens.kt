@@ -1,6 +1,9 @@
 package com.simats.sdc.presentation.patient
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,8 +12,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,21 +26,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.FileProvider
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.simats.sdc.core.theme.OralCareColors
 import com.simats.sdc.core.theme.OralCareTokens
 import com.simats.sdc.data.dto.*
 import com.simats.sdc.presentation.components.*
+import java.io.File
 
 @Composable
 fun PatientsScreen(viewModel: PatientsViewModel) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) { viewModel.loadPatients(1) }
+    LaunchedEffect(state.reportDownloadedFile) {
+        state.reportDownloadedFile?.let { file ->
+            Toast.makeText(context, "Report saved to Downloads/OralCare/${file.name}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val detailPatient = state.selectedPatient
     if (detailPatient != null) {
@@ -46,6 +61,12 @@ fun PatientsScreen(viewModel: PatientsViewModel) {
             isLoading = state.isLoadingDetail,
             baseUrl = state.baseUrl,
             accessToken = state.accessToken,
+            isDownloadingReport = state.isDownloadingReport,
+            reportDownloadedFile = state.reportDownloadedFile,
+            reportMessage = state.reportMessage,
+            reportError = state.reportError,
+            onDownloadReport = { viewModel.downloadPatientReport(detailPatient, state.patientScreenings) },
+            onShareReport = { viewModel.sharePatientReport(context, detailPatient, state.patientScreenings) },
             onRefresh = { viewModel.refreshSelectedPatient() },
             onBack = { viewModel.closePatientDetail() },
         )
@@ -119,9 +140,16 @@ private fun PatientDetailView(
     isLoading: Boolean,
     baseUrl: String,
     accessToken: String,
+    isDownloadingReport: Boolean,
+    reportDownloadedFile: File?,
+    reportMessage: String?,
+    reportError: String?,
+    onDownloadReport: () -> Unit,
+    onShareReport: () -> Unit,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
     var previewImage by remember { mutableStateOf<PatientImageDto?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -131,6 +159,20 @@ private fun PatientDetailView(
             showBackButton = true,
             onBack = onBack,
             actions = {
+                IconButton(onClick = onDownloadReport) {
+                    if (isDownloadingReport) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = OralCareColors.AccentBlueStrong,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Download Report", tint = OralCareColors.AccentBlueStrong)
+                    }
+                }
+                IconButton(onClick = onShareReport) {
+                    Icon(Icons.Default.Share, contentDescription = "Share Report", tint = OralCareColors.AccentBlueStrong)
+                }
                 IconButton(onClick = onRefresh) {
                     Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = OralCareColors.AccentBlueStrong)
                 }
@@ -142,9 +184,182 @@ private fun PatientDetailView(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            // Patient Clinical Report & PDF Export Card
+            item {
+                GlassCard(contentPadding = PaddingValues(16.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = OralCareColors.LightBlue,
+                                    modifier = Modifier.size(38.dp),
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.PictureAsPdf,
+                                            contentDescription = null,
+                                            tint = OralCareColors.AccentBlueStrong,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Individual Clinical Report",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OralCareColors.TextPrimary,
+                                    )
+                                    Text(
+                                        text = "Saveetha Dental College • Complete PDF Summary",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = OralCareColors.TextSecondary,
+                                    )
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = "Download or share a detailed medical & dental report including full personal history, 11-region findings, teeth records, lab investigations, and AI assessment.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OralCareColors.TextSecondary,
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            GlassButton(
+                                text = "Download PDF",
+                                icon = Icons.Default.Download,
+                                loading = isDownloadingReport,
+                                onClick = onDownloadReport,
+                                fontSize = 12.5.sp,
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 11.dp),
+                                modifier = Modifier.weight(1f),
+                            )
+                            GlassButton(
+                                text = "Share Report",
+                                icon = Icons.Default.Share,
+                                isPrimary = false,
+                                enabled = !isDownloadingReport,
+                                onClick = onShareReport,
+                                fontSize = 12.5.sp,
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 11.dp),
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+
+                        if (!reportError.isNullOrBlank()) {
+                            Text(
+                                text = reportError,
+                                color = OralCareColors.AbnormalRed,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+
+                        if (!reportMessage.isNullOrBlank() && reportDownloadedFile != null) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = OralCareColors.NormalGreenBg,
+                                border = BorderStroke(1.dp, OralCareColors.NormalGreen.copy(alpha = 0.35f)),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = OralCareColors.NormalGreen,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Report Saved Successfully",
+                                                color = OralCareColors.NormalGreen,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                            Text(
+                                                text = "Downloads/OralCare/${reportDownloadedFile.name}",
+                                                color = OralCareColors.TextSecondary,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        GlassButton(
+                                            text = "Open PDF",
+                                            icon = Icons.AutoMirrored.Filled.OpenInNew,
+                                            isPrimary = true,
+                                            fontSize = 12.sp,
+                                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                                            onClick = {
+                                                runCatching {
+                                                    val uri = FileProvider.getUriForFile(
+                                                        context,
+                                                        "${context.packageName}.fileprovider",
+                                                        reportDownloadedFile,
+                                                    )
+                                                    val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                                                        setDataAndType(uri, "application/pdf")
+                                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                    }
+                                                    val shareFallback = Intent(Intent.ACTION_SEND).apply {
+                                                        type = "application/pdf"
+                                                        putExtra(Intent.EXTRA_STREAM, uri)
+                                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                    }
+                                                    runCatching {
+                                                        context.startActivity(viewIntent)
+                                                    }.onFailure {
+                                                        context.startActivity(Intent.createChooser(shareFallback, "Open Patient Report"))
+                                                    }
+                                                }.onFailure { err ->
+                                                    Toast.makeText(context, "Cannot open PDF: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                        )
+
+                                        GlassButton(
+                                            text = "Share",
+                                            icon = Icons.Default.Share,
+                                            isPrimary = false,
+                                            fontSize = 12.sp,
+                                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                                            onClick = onShareReport,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Complete Patient Demographics Card (Step 2)
             item {
-                GlassCard(highlighted = true, contentPadding = PaddingValues(16.dp)) {
+                GlassCard(contentPadding = PaddingValues(16.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

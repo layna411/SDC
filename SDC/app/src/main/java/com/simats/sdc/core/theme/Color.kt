@@ -58,12 +58,21 @@ object OralCareColors {
         colors = listOf(PrimaryBackground, SecondaryBackground, PrimaryBackground)
     )
 
-    val HighlightCardGradient = Brush.linearGradient(
-        colors = listOf(Color(0xFFEAF5FF), Color(0xFFDAEEFF), Color(0xFFF3F9FF))
+    // Unified Light Blue Glassmorphism Card Gradient:
+    // Translucent frosted glass with soft white sheen at top blending into delicate pastel blue
+    val CardSurfaceGradient = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xF4FFFFFF), // Frosted white reflection at top
+            Color(0xDFE7F4FC), // Delicate pastel-blue glass tint at bottom
+        )
     )
 
-    val CardSurfaceGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFFFFFFFF), Color(0xFFF6FAFF))
+    // Highlight Card Gradient (for hero CTA banners), perfectly in harmony with CardSurfaceGradient
+    val HighlightCardGradient = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xF6FFFFFF),
+            Color(0xD8DFEFFB),
+        )
     )
 
     val PrimaryButtonGradient = Brush.horizontalGradient(
@@ -71,10 +80,10 @@ object OralCareColors {
     )
 
     val SecondaryButtonGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFFFFFFFF), Color(0xFFEEF6FF))
+        colors = listOf(Color(0xF8FFFFFF), Color(0xEDE3F2FD))
     )
 
     val HeaderGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFFF9FCFF), Color(0xFFF2F8FF))
+        colors = listOf(Color(0xF6FFFFFF), Color(0xDFEAF6FD))
     )
 }
