@@ -1,8 +1,13 @@
 package com.simats.sdc.presentation.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -45,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -617,8 +623,10 @@ fun GlassHeader(
 }
 
 /**
- * Floating Capsule GlassBottomNavigation — respects Android system navigation bar insets,
- * adapts gracefully to 6 organizer tabs or 5 admin tabs on smaller phones without clipping.
+ * Edge-to-Edge Frosted GlassBottomNavigation featuring playful Jelly Icons.
+ * Docked cleanly at the bottom of the screen with elegant rounded top corners.
+ * When tapped, the icon squashes down, leaps upward, and wobbles elastically like jelly
+ * while a luminous translucent sky-blue jelly bubble springs up and fills behind it.
  */
 @Composable
 fun GlassBottomNavigation(
@@ -628,75 +636,262 @@ fun GlassBottomNavigation(
     modifier: Modifier = Modifier,
 ) {
     val isDark = MaterialTheme.colorScheme.background == OralCareColors.DarkBackground
+    val navShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
 
-    Box(
+    Surface(
+        shape = navShape,
+        color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.Transparent)
-            .navigationBarsPadding()
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center,
+            .shadow(
+                elevation = 8.dp,
+                shape = navShape,
+                ambientColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.12f),
+                spotColor = OralCareColors.AccentBlueStrong.copy(alpha = 0.08f),
+            )
+            .clip(navShape)
+            .background(
+                if (isDark) {
+                    Brush.verticalGradient(
+                        listOf(
+                            OralCareColors.DarkSurface.copy(alpha = 0.98f),
+                            OralCareColors.DarkCard.copy(alpha = 0.98f),
+                        )
+                    )
+                } else {
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xF9FFFFFF), // Frosted white reflection at top
+                            Color(0xEDEAF5FD), // Soft pastel sky-blue glass
+                        )
+                    )
+                },
+                navShape,
+            )
+            .border(
+                BorderStroke(
+                    width = 1.dp,
+                    color = if (isDark) OralCareColors.DarkBorder else Color(0xFFC0DEF8),
+                ),
+                shape = navShape,
+            ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Transparent)
-                .padding(horizontal = 4.dp, vertical = 4.dp),
+                .navigationBarsPadding()
+                .padding(horizontal = 6.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             destinations.forEach { dest ->
                 val selected = dest.route == selectedRoute
-                val iconTint by animateColorAsState(
-                    targetValue = if (selected) OralCareColors.AccentBlueStrong else OralCareColors.TextSecondary,
-                    animationSpec = tween(220),
-                    label = "navIconTint",
+                JellyNavItem(
+                    destination = dest,
+                    selected = selected,
+                    isDark = isDark,
+                    tabCount = destinations.size,
+                    onClick = { onSelect(dest.route) },
                 )
-                val pillColor by animateColorAsState(
-                    targetValue = if (selected) {
-                        if (isDark) OralCareColors.AccentBlue.copy(alpha = 0.18f) else OralCareColors.LightBlue.copy(alpha = 0.55f)
-                    } else Color.Transparent,
-                    animationSpec = tween(220),
-                    label = "navPillColor",
-                )
-                val iconSize by animateDpAsState(
-                    targetValue = if (selected) 22.dp else 20.dp,
-                    animationSpec = tween(200),
-                    label = "navIconSize",
-                )
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(pillColor)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { onSelect(dest.route) },
-                        )
-                        .padding(vertical = 6.dp, horizontal = 2.dp),
-                ) {
-                    Icon(
-                        imageVector = dest.icon,
-                        contentDescription = dest.label,
-                        tint = iconTint,
-                        modifier = Modifier.size(iconSize),
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = dest.label,
-                        color = iconTint,
-                        fontSize = if (destinations.size >= 6) 9.5.sp else 10.5.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
         }
+    }
+}
+
+/**
+ * Jelly Navigation Tab Item:
+ * When tapped, the icon squashes outward, leaps upward into the air, and wobbles
+ * like jelly as an elastic sky-blue gelatin bubble fills and blooms behind it.
+ */
+@Composable
+private fun RowScope.JellyNavItem(
+    destination: GlassNavDestination,
+    selected: Boolean,
+    isDark: Boolean,
+    tabCount: Int,
+    onClick: () -> Unit,
+) {
+    var tapCounter by remember { mutableIntStateOf(0) }
+
+    // Jelly physics: squash horizontal, stretch vertical, and vertical jump translation
+    val scaleX = remember { Animatable(1f) }
+    val scaleY = remember { Animatable(1f) }
+    val translationY = remember { Animatable(0f) }
+
+    // Jelly bubble background fill progress
+    val bubbleScale = remember { Animatable(if (selected) 1f else 0f) }
+    val bubbleAlpha = remember { Animatable(if (selected) 1f else 0f) }
+
+    // Trigger squash, jump, wobble jelly keyframe animation whenever selected or tapped
+    LaunchedEffect(selected, tapCounter) {
+        if (selected) {
+            // Jelly fill bubble expands with bouncy spring
+            launch {
+                bubbleScale.animateTo(
+                    targetValue = 1f,
+                    animationSpec = spring(
+                        dampingRatio = 0.52f, // Authentic jelly overshoot
+                        stiffness = Spring.StiffnessMediumLow,
+                    ),
+                )
+            }
+            launch {
+                bubbleAlpha.animateTo(1f, tween(160))
+            }
+
+            // Squash horizontally
+            launch {
+                scaleX.snapTo(1f)
+                scaleX.animateTo(
+                    targetValue = 1f,
+                    animationSpec = keyframes {
+                        durationMillis = 520
+                        1.38f at 90 using FastOutSlowInEasing   // Squash wide
+                        0.78f at 220 using FastOutSlowInEasing  // Thin stretch in flight
+                        1.22f at 340 using FastOutSlowInEasing  // Splat on landing
+                        0.92f at 430 using FastOutSlowInEasing  // Rebound wobble
+                        1.04f at 480 using LinearEasing
+                        1.00f at 520 using LinearEasing
+                    },
+                )
+            }
+
+            // Squash vertically
+            launch {
+                scaleY.snapTo(1f)
+                scaleY.animateTo(
+                    targetValue = 1f,
+                    animationSpec = keyframes {
+                        durationMillis = 520
+                        0.65f at 90 using FastOutSlowInEasing   // Squash down
+                        1.38f at 220 using FastOutSlowInEasing  // Stretch up during jump
+                        0.84f at 340 using FastOutSlowInEasing  // Land squash
+                        1.08f at 430 using FastOutSlowInEasing  // Rebound wobble
+                        0.98f at 480 using LinearEasing
+                        1.00f at 520 using LinearEasing
+                    },
+                )
+            }
+
+            // Vertical jump
+            launch {
+                translationY.snapTo(0f)
+                translationY.animateTo(
+                    targetValue = 0f,
+                    animationSpec = keyframes {
+                        durationMillis = 520
+                        2.5f at 90 using FastOutSlowInEasing     // Push into surface
+                        -10f at 220 using FastOutSlowInEasing    // Leaps into air!
+                        1.5f at 340 using FastOutSlowInEasing    // Land bounce
+                        -2f at 430 using FastOutSlowInEasing     // Little hop
+                        0f at 520 using LinearEasing             // Rest
+                    },
+                )
+            }
+        } else {
+            // Deflate jelly bubble smoothly
+            launch {
+                bubbleScale.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(180, easing = FastOutSlowInEasing),
+                )
+            }
+            launch {
+                bubbleAlpha.animateTo(0f, tween(160))
+            }
+            scaleX.snapTo(1f)
+            scaleY.snapTo(1f)
+            translationY.snapTo(0f)
+        }
+    }
+
+    val iconTint by animateColorAsState(
+        targetValue = if (selected) OralCareColors.AccentBlueStrong else OralCareColors.TextSecondary,
+        animationSpec = tween(220),
+        label = "jellyIconTint",
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .weight(1f)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null, // Custom jelly animation replaces generic ripple
+                onClick = {
+                    tapCounter++
+                    onClick()
+                },
+            )
+            .padding(vertical = 4.dp, horizontal = 1.dp),
+    ) {
+        // Jelly Icon Container with Animated Jelly Pill Fill
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .height(34.dp)
+                .fillMaxWidth(),
+        ) {
+            // Luminous Jelly Pill Bubble (fills behind the icon, no top line)
+            if (bubbleAlpha.value > 0.01f) {
+                Box(
+                    modifier = Modifier
+                        .width(44.dp)
+                        .height(30.dp)
+                        .scale(bubbleScale.value)
+                        .clip(RoundedCornerShape(15.dp))
+                        .background(
+                            if (isDark) {
+                                Brush.verticalGradient(
+                                    listOf(
+                                        OralCareColors.AccentBlue.copy(alpha = 0.35f * bubbleAlpha.value),
+                                        OralCareColors.AccentBlueStrong.copy(alpha = 0.20f * bubbleAlpha.value),
+                                    )
+                                )
+                            } else {
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0xFFBAE0FE).copy(alpha = 0.85f * bubbleAlpha.value),
+                                        Color(0xFFD6EDFF).copy(alpha = 0.60f * bubbleAlpha.value),
+                                    )
+                                )
+                            }
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isDark) Color(0x6676B7E5) else Color.White.copy(alpha = 0.85f * bubbleAlpha.value),
+                            shape = RoundedCornerShape(15.dp),
+                        ),
+                )
+            }
+
+            // The Jelly Icon itself (squashes, jumps & wobbles via graphicsLayer)
+            Icon(
+                imageVector = destination.icon,
+                contentDescription = destination.label,
+                tint = iconTint,
+                modifier = Modifier
+                    .size(if (selected) 22.dp else 20.dp)
+                    .graphicsLayer {
+                        this.scaleX = scaleX.value
+                        this.scaleY = scaleY.value
+                        this.translationY = translationY.value.dp.toPx()
+                    },
+            )
+        }
+
+        Spacer(Modifier.height(3.dp))
+
+        // Tab Label
+        Text(
+            text = destination.label,
+            color = iconTint,
+            fontSize = if (tabCount >= 6) 9.5.sp else 10.5.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
