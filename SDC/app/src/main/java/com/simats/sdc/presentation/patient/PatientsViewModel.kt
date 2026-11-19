@@ -16,10 +16,21 @@ import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
 
+enum class PatientFilterType {
+    ALL,
+    NORMAL,
+    ABNORMAL,
+    PENDING_REVIEW,
+    LESION_PRESENT,
+    MALE,
+    FEMALE,
+}
+
 data class PatientsUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val searchQuery: String = "",
+    val activeFilter: PatientFilterType = PatientFilterType.ALL,
     val sexFilter: String? = null,
     val outcomeFilter: String? = null,
     val lesionFilter: Boolean? = null,
@@ -85,19 +96,58 @@ class PatientsViewModel @Inject constructor(
         loadPatients(1)
     }
 
-    fun onSexFilterChange(sex: String?) {
-        _uiState.update { it.copy(sexFilter = sex) }
+    fun onFilterSelect(filter: PatientFilterType) {
+        val newFilter = if (_uiState.value.activeFilter == filter && filter != PatientFilterType.ALL) {
+            PatientFilterType.ALL
+        } else {
+            filter
+        }
+        _uiState.update {
+            it.copy(
+                activeFilter = newFilter,
+                sexFilter = when (newFilter) {
+                    PatientFilterType.MALE -> "MALE"
+                    PatientFilterType.FEMALE -> "FEMALE"
+                    else -> null
+                },
+                outcomeFilter = when (newFilter) {
+                    PatientFilterType.NORMAL -> "NORMAL"
+                    PatientFilterType.ABNORMAL -> "ABNORMAL"
+                    PatientFilterType.PENDING_REVIEW -> "PENDING_CLINICAL_REVIEW"
+                    else -> null
+                },
+                lesionFilter = when (newFilter) {
+                    PatientFilterType.LESION_PRESENT -> true
+                    else -> null
+                },
+            )
+        }
         loadPatients(1)
+    }
+
+    fun onSexFilterChange(sex: String?) {
+        when (sex) {
+            "MALE" -> onFilterSelect(PatientFilterType.MALE)
+            "FEMALE" -> onFilterSelect(PatientFilterType.FEMALE)
+            else -> onFilterSelect(PatientFilterType.ALL)
+        }
     }
 
     fun onOutcomeFilterChange(outcome: String?) {
-        _uiState.update { it.copy(outcomeFilter = outcome) }
-        loadPatients(1)
+        when (outcome) {
+            "NORMAL" -> onFilterSelect(PatientFilterType.NORMAL)
+            "ABNORMAL" -> onFilterSelect(PatientFilterType.ABNORMAL)
+            "PENDING_CLINICAL_REVIEW" -> onFilterSelect(PatientFilterType.PENDING_REVIEW)
+            else -> onFilterSelect(PatientFilterType.ALL)
+        }
     }
 
     fun onLesionFilterChange(lesion: Boolean?) {
-        _uiState.update { it.copy(lesionFilter = lesion) }
-        loadPatients(1)
+        if (lesion == true) {
+            onFilterSelect(PatientFilterType.LESION_PRESENT)
+        } else {
+            onFilterSelect(PatientFilterType.ALL)
+        }
     }
 
     fun openPatientDetail(patient: PatientDto) {

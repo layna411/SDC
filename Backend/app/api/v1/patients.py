@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
@@ -29,6 +29,11 @@ def _enrich_patient(patient: Patient) -> PatientResponse:
     screenings = [s for s in (patient.screenings or []) if not s.is_deleted]
     resp.total_screenings = len(screenings)
     if screenings:
+        # Guarantee strictly sorted by created_at desc, then id desc
+        screenings.sort(
+            key=lambda s: (s.created_at or datetime.min, s.id or 0),
+            reverse=True,
+        )
         latest = screenings[0]
         resp.latest_outcome = latest.outcome
         resp.latest_lesion_present = latest.lesion_present
@@ -84,7 +89,15 @@ def list_patients(
 
     # Filter on latest screening clinical metadata if requested
     if screening_outcome is not None:
-        enriched = [p for p in enriched if p.latest_outcome == screening_outcome]
+        target_outcome_str = screening_outcome.value if hasattr(screening_outcome, "value") else str(screening_outcome)
+        enriched = [
+            p for p in enriched
+            if p.latest_outcome is not None and (
+                p.latest_outcome == screening_outcome
+                or (hasattr(p.latest_outcome, "value") and p.latest_outcome.value == target_outcome_str)
+                or str(p.latest_outcome).upper() == str(target_outcome_str).upper()
+            )
+        ]
     if lesion_present is not None:
         enriched = [p for p in enriched if p.latest_lesion_present == lesion_present]
     if review_status:

@@ -100,13 +100,41 @@ fun PatientsScreen(viewModel: PatientsViewModel) {
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                FilterChip(selected = state.outcomeFilter == null, onClick = { viewModel.onOutcomeFilterChange(null) }, label = { Text("All Outcomes") })
-                FilterChip(selected = state.outcomeFilter == "NORMAL", onClick = { viewModel.onOutcomeFilterChange("NORMAL") }, label = { Text("Normal") })
-                FilterChip(selected = state.outcomeFilter == "ABNORMAL", onClick = { viewModel.onOutcomeFilterChange("ABNORMAL") }, label = { Text("Abnormal") })
-                FilterChip(selected = state.outcomeFilter == "PENDING_CLINICAL_REVIEW", onClick = { viewModel.onOutcomeFilterChange("PENDING_CLINICAL_REVIEW") }, label = { Text("Pending Review") })
-                FilterChip(selected = state.lesionFilter == true, onClick = { viewModel.onLesionFilterChange(if (state.lesionFilter == true) null else true) }, label = { Text("Lesion Present") })
-                FilterChip(selected = state.sexFilter == "MALE", onClick = { viewModel.onSexFilterChange(if (state.sexFilter == "MALE") null else "MALE") }, label = { Text("Male") })
-                FilterChip(selected = state.sexFilter == "FEMALE", onClick = { viewModel.onSexFilterChange(if (state.sexFilter == "FEMALE") null else "FEMALE") }, label = { Text("Female") })
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.ALL,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.ALL) },
+                    label = { Text("All") },
+                )
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.NORMAL,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.NORMAL) },
+                    label = { Text("Normal") },
+                )
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.ABNORMAL,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.ABNORMAL) },
+                    label = { Text("Abnormal") },
+                )
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.PENDING_REVIEW,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.PENDING_REVIEW) },
+                    label = { Text("Pending Review") },
+                )
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.LESION_PRESENT,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.LESION_PRESENT) },
+                    label = { Text("Lesion Present") },
+                )
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.MALE,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.MALE) },
+                    label = { Text("Male") },
+                )
+                FilterChip(
+                    selected = state.activeFilter == PatientFilterType.FEMALE,
+                    onClick = { viewModel.onFilterSelect(PatientFilterType.FEMALE) },
+                    label = { Text("Female") },
+                )
             }
 
             when {
@@ -233,25 +261,25 @@ private fun PatientDetailView(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             GlassButton(
                                 text = "Download PDF",
                                 icon = Icons.Default.Download,
                                 loading = isDownloadingReport,
                                 onClick = onDownloadReport,
-                                fontSize = 12.5.sp,
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 11.dp),
+                                fontSize = 11.5.sp,
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 10.dp),
                                 modifier = Modifier.weight(1f),
                             )
                             GlassButton(
-                                text = "Share Report",
+                                text = "Share PDF",
                                 icon = Icons.Default.Share,
                                 isPrimary = false,
                                 enabled = !isDownloadingReport,
                                 onClick = onShareReport,
-                                fontSize = 12.5.sp,
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 11.dp),
+                                fontSize = 11.5.sp,
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 10.dp),
                                 modifier = Modifier.weight(1f),
                             )
                         }
