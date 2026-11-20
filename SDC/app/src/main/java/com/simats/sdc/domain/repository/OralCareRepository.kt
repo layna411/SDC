@@ -87,6 +87,7 @@ interface OralCareRepository {
     // Feedback
     suspend fun listFeedback(minRating: Int? = null, search: String? = null): RepoResult<FeedbackSummaryDto>
     suspend fun createFeedback(req: FeedbackCreateDto): RepoResult<FeedbackDto>
+    suspend fun replyFeedback(id: Int, reply: String): RepoResult<FeedbackDto>
     suspend fun deleteFeedback(id: Int): RepoResult<Unit>
 
     // Education & Awareness

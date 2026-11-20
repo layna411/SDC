@@ -389,6 +389,17 @@ fun AdminRoleDashboardScreen(
                         GlassStatCard("Abnormal", stats.abnormalScreenings.toString(), Icons.Default.Warning, Modifier.weight(1f), OralCareColors.AbnormalRed)
                         GlassStatCard("Lesions", stats.lesionsDetected.toString(), Icons.Default.LocalHospital, Modifier.weight(1f), OralCareColors.WarningAmber)
                     }
+                    Spacer(Modifier.height(4.dp))
+                    GlassStatCard(
+                        title = "Total Feedback",
+                        value = stats.totalFeedback.toString(),
+                        icon = Icons.Default.Star,
+                        accentColor = OralCareColors.WarningAmber,
+                        subtitle = "Average satisfaction: ${stats.averageFeedbackRating} / 5.0 • Tap to view & reply",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpenFeedback() },
+                    )
                 }
             }
 
@@ -425,13 +436,11 @@ fun AdminRoleDashboardScreen(
                     }
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        GlassButton("Feedback", onOpenFeedback, isPrimary = false, icon = Icons.Default.RateReview, modifier = Modifier.weight(1f))
                         if (role == "SUPER_ADMIN" || role == "COLLEGE_ADMIN") {
                             GlassButton("Education", onOpenEducation, isPrimary = false, icon = Icons.AutoMirrored.Filled.MenuBook, modifier = Modifier.weight(1f))
                         }
                         GlassButton("Activity Logs", onOpenActivity, isPrimary = false, icon = Icons.Default.History, modifier = Modifier.weight(1f))
-                        if (role == "CENTER_ADMIN") {
-                            GlassButton("Feedback", onOpenFeedback, isPrimary = false, icon = Icons.Default.RateReview, modifier = Modifier.weight(1f))
-                        }
                     }
                 }
             }

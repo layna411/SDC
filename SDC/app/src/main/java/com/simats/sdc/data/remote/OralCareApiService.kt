@@ -145,6 +145,9 @@ interface OralCareApiService {
     @POST("feedback")
     suspend fun createFeedback(@Body body: FeedbackCreateDto): Response<FeedbackDto>
 
+    @POST("feedback/{id}/reply")
+    suspend fun replyFeedback(@Path("id") id: Int, @Body body: FeedbackReplyDto): Response<FeedbackDto>
+
     @PUT("feedback/{id}")
     suspend fun updateFeedback(@Path("id") id: Int, @Body body: FeedbackCreateDto): Response<FeedbackDto>
 

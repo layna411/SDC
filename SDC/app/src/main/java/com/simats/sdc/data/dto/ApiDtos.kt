@@ -524,11 +524,26 @@ data class FeedbackCreateDto(
 
 data class FeedbackDto(
     val id: Int,
+    @SerializedName("college_id") val collegeId: Int? = null,
+    @SerializedName("center_id") val centerId: Int? = null,
+    @SerializedName("patient_id") val patientId: Int? = null,
+    @SerializedName("created_by_user_id") val createdByUserId: Int? = null,
     @SerializedName("patient_name") val patientName: String,
     val email: String,
     val rating: Int,
     val message: String,
-    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("admin_reply") val adminReply: String? = null,
+    @SerializedName("replied_by_user_id") val repliedByUserId: Int? = null,
+    @SerializedName("replied_at") val repliedAt: String? = null,
+    @SerializedName("replied_by_name") val repliedByName: String? = null,
+    @SerializedName("replied_by_role") val repliedByRole: String? = null,
+    @SerializedName("college_name") val collegeName: String? = null,
+    @SerializedName("center_name") val centerName: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+)
+
+data class FeedbackReplyDto(
+    val reply: String,
 )
 
 data class FeedbackSummaryDto(

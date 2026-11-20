@@ -171,12 +171,30 @@ def seed_initial_data(db: Session) -> None:
         db.commit()
 
 
+def ensure_feedback_columns(db_engine):
+    try:
+        from sqlalchemy import inspect, text
+        inspector = inspect(db_engine)
+        if "feedback" in inspector.get_table_names():
+            existing = {c["name"] for c in inspector.get_columns("feedback")}
+            with db_engine.begin() as conn:
+                if "admin_reply" not in existing:
+                    conn.execute(text("ALTER TABLE feedback ADD COLUMN admin_reply TEXT NULL"))
+                if "replied_by_user_id" not in existing:
+                    conn.execute(text("ALTER TABLE feedback ADD COLUMN replied_by_user_id INTEGER NULL"))
+                if "replied_at" not in existing:
+                    conn.execute(text("ALTER TABLE feedback ADD COLUMN replied_at DATETIME NULL"))
+    except Exception:
+        pass
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     settings.storage_path.mkdir(parents=True, exist_ok=True)
     # Create tables automatically in development/sqlite; use Alembic migrations in production MySQL
     if settings.ENVIRONMENT == "development" or settings.DATABASE_URL.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
+        ensure_feedback_columns(engine)
         db = SessionLocal()
         try:
             seed_initial_data(db)

@@ -221,7 +221,13 @@ private fun AuthenticatedRoleShell(
         "feedback_overlay" -> {
             GlassBackground {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    FeedbackScreen(viewModel = feedbackViewModel, showBackButton = true, onBack = { overlayRoute = null })
+                    FeedbackScreen(
+                        viewModel = feedbackViewModel,
+                        currentRole = role,
+                        userCollegeId = session.collegeId,
+                        showBackButton = true,
+                        onBack = { overlayRoute = null },
+                    )
                 }
             }
             return
@@ -352,7 +358,11 @@ private fun AuthenticatedRoleShell(
                             },
                         )
                         "patients" -> PatientsScreen(viewModel = patientsViewModel)
-                        "feedback" -> FeedbackScreen(viewModel = feedbackViewModel)
+                        "feedback" -> FeedbackScreen(
+                            viewModel = feedbackViewModel,
+                            currentRole = role,
+                            userCollegeId = session.collegeId,
+                        )
                         "reports" -> ReportsScreen(viewModel = reportsViewModel)
                         "activity" -> ActivityScreen(viewModel = activityViewModel)
                     }

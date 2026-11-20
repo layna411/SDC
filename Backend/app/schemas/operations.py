@@ -22,6 +22,10 @@ class FeedbackUpdateRequest(BaseModel):
     message: Optional[str] = Field(default=None, min_length=2, max_length=2000)
 
 
+class FeedbackReplyRequest(BaseModel):
+    reply: str = Field(..., min_length=1, max_length=3000)
+
+
 class FeedbackResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -33,6 +37,13 @@ class FeedbackResponse(BaseModel):
     email: str
     rating: int
     message: str
+    admin_reply: Optional[str] = None
+    replied_by_user_id: Optional[int] = None
+    replied_at: Optional[datetime] = None
+    replied_by_name: Optional[str] = None
+    replied_by_role: Optional[str] = None
+    college_name: Optional[str] = None
+    center_name: Optional[str] = None
     created_at: datetime
 
 

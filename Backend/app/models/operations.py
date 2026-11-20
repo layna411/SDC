@@ -43,6 +43,11 @@ class Feedback(Base, TimestampSoftDeleteMixin):
     email: Mapped[str] = mapped_column(String(150), nullable=False)
     rating: Mapped[int] = mapped_column(Integer, nullable=False)  # 1..5
     message: Mapped[str] = mapped_column(Text, nullable=False)
+    admin_reply: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    replied_by_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    replied_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class EducationalResource(Base, TimestampSoftDeleteMixin):

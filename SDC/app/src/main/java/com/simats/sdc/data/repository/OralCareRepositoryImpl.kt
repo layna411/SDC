@@ -806,6 +806,9 @@ class OralCareRepositoryImpl @Inject constructor(
     override suspend fun createFeedback(req: FeedbackCreateDto): RepoResult<FeedbackDto> =
         safeCall { api.createFeedback(req) }
 
+    override suspend fun replyFeedback(id: Int, reply: String): RepoResult<FeedbackDto> =
+        safeCall { api.replyFeedback(id, FeedbackReplyDto(reply)) }
+
     override suspend fun deleteFeedback(id: Int): RepoResult<Unit> =
         when (val res = safeCall { api.deleteFeedback(id) }) {
             is RepoResult.Success -> RepoResult.Success(Unit)
