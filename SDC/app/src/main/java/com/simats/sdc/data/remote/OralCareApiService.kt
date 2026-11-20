@@ -57,6 +57,9 @@ interface OralCareApiService {
     @POST("centers")
     suspend fun createCenter(@Body body: CenterCreateDto): Response<CenterCreatedWithAdminDto>
 
+    @POST("centers/{id}/admin")
+    suspend fun generateOrResetCenterAdmin(@Path("id") id: Int): Response<CenterCreatedWithAdminDto>
+
     @PATCH("centers/{id}/status")
     suspend fun toggleCenterStatus(@Path("id") id: Int, @Query("is_active") isActive: Boolean): Response<CenterDto>
 

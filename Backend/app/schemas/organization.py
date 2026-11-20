@@ -48,6 +48,9 @@ class CollegeResponse(BaseModel):
     contact_phone: Optional[str] = None
     is_active: bool
     created_at: datetime
+    admin_username: Optional[str] = None
+    admin_user_id: Optional[int] = None
+    has_admin: bool = False
 
 
 class CollegeCreateWithAdminResponse(BaseModel):
@@ -102,6 +105,9 @@ class CenterResponse(BaseModel):
     contact_phone: Optional[str] = None
     is_active: bool
     created_at: datetime
+    admin_username: Optional[str] = None
+    admin_user_id: Optional[int] = None
+    has_admin: bool = False
 
 
 class CenterCreateWithAdminResponse(BaseModel):

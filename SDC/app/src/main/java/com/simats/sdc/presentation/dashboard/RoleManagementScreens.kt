@@ -1,5 +1,6 @@
 package com.simats.sdc.presentation.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -149,6 +150,7 @@ fun CentersManagementScreen(
     uiState: DashboardUiState,
     onCreateCenter: (CenterCreateDto) -> Unit,
     onToggleCenter: (Int, Boolean) -> Unit,
+    onResetAdminCredentials: ((Int) -> Unit)? = null,
     onDismissBanner: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
@@ -209,31 +211,58 @@ fun CentersManagementScreen(
                     ) {
                         items(filtered, key = { it.id }) { ct ->
                             GlassCard(contentPadding = PaddingValues(14.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier.size(42.dp).clip(CircleShape).background(OralCareColors.LightBlue),
-                                        ) {
-                                            Icon(Icons.Default.LocalHospital, contentDescription = null, tint = OralCareColors.AccentBlueStrong, modifier = Modifier.size(20.dp))
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier.size(42.dp).clip(CircleShape).background(OralCareColors.LightBlue),
+                                            ) {
+                                                Icon(Icons.Default.LocalHospital, contentDescription = null, tint = OralCareColors.AccentBlueStrong, modifier = Modifier.size(20.dp))
+                                            }
+                                            Spacer(Modifier.width(12.dp))
+                                            Column {
+                                                Text(ct.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                                Text("${ct.centerCode} • Hub: ${ct.hubName ?: "General"}", style = MaterialTheme.typography.bodySmall, color = OralCareColors.TextSecondary)
+                                                if (!ct.adminUsername.isNullOrBlank()) {
+                                                    Text("Admin: @${ct.adminUsername}", style = MaterialTheme.typography.bodySmall, color = OralCareColors.AccentBlueStrong, fontWeight = FontWeight.SemiBold)
+                                                } else {
+                                                    Text("No Admin Assigned", style = MaterialTheme.typography.bodySmall, color = OralCareColors.AbnormalRed)
+                                                }
+                                                Spacer(Modifier.height(4.dp))
+                                                StatusPill(
+                                                    text = if (ct.isActive) "Active" else "Inactive",
+                                                    bg = if (ct.isActive) OralCareColors.NormalGreenBg else OralCareColors.AbnormalRedBg,
+                                                    fg = if (ct.isActive) OralCareColors.NormalGreen else OralCareColors.AbnormalRed,
+                                                )
+                                            }
                                         }
-                                        Spacer(Modifier.width(12.dp))
-                                        Column {
-                                            Text(ct.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                                            Text("${ct.centerCode} • Hub: ${ct.hubName ?: "General"}", style = MaterialTheme.typography.bodySmall, color = OralCareColors.TextSecondary)
-                                            Spacer(Modifier.height(4.dp))
-                                            StatusPill(
-                                                text = if (ct.isActive) "Active" else "Inactive",
-                                                bg = if (ct.isActive) OralCareColors.NormalGreenBg else OralCareColors.AbnormalRedBg,
-                                                fg = if (ct.isActive) OralCareColors.NormalGreen else OralCareColors.AbnormalRed,
-                                            )
+                                        Switch(checked = ct.isActive, onCheckedChange = { onToggleCenter(ct.id, !ct.isActive) })
+                                    }
+
+                                    if (onResetAdminCredentials != null) {
+                                        Spacer(Modifier.height(8.dp))
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                            OutlinedButton(
+                                                onClick = { onResetAdminCredentials(ct.id) },
+                                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                                border = BorderStroke(1.dp, OralCareColors.AccentBlueStrong),
+                                            ) {
+                                                Icon(Icons.Default.Key, contentDescription = null, tint = OralCareColors.AccentBlueStrong, modifier = Modifier.size(16.dp))
+                                                Spacer(Modifier.width(6.dp))
+                                                Text(
+                                                    text = if (ct.adminUsername.isNullOrBlank()) "Generate Admin Credentials" else "Reset Credentials",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = OralCareColors.AccentBlueStrong,
+                                                    fontWeight = FontWeight.Bold,
+                                                )
+                                            }
                                         }
                                     }
-                                    Switch(checked = ct.isActive, onCheckedChange = { onToggleCenter(ct.id, !ct.isActive) })
                                 }
                             }
                         }
@@ -837,16 +866,20 @@ internal fun AddCenterModal(
         onDismiss = onDismiss,
         confirmButton = {
             GlassButton("Create", enabled = code.isNotBlank() && name.isNotBlank(), onClick = {
+                val cleanCode = code.trim().uppercase()
+                val finalAdminUser = if (adminUser.isNotBlank()) adminUser.trim() else "${cleanCode.lowercase()}_admin"
+                val finalAdminName = if (adminName.isNotBlank()) adminName.trim() else "${name.trim()} Admin"
+
                 onSubmit(
                     CenterCreateDto(
                         collegeId = if (requireCollegePicker) selectedCollegeId else null,
-                        centerCode = code,
-                        name = name,
+                        centerCode = cleanCode,
+                        name = name.trim(),
                         hubName = hub.ifBlank { null },
                         healthPartner = partner.ifBlank { null },
-                        createAdminAccount = adminUser.isNotBlank(),
-                        adminUsername = adminUser.ifBlank { null },
-                        adminFullName = adminName.ifBlank { null },
+                        createAdminAccount = true,
+                        adminUsername = finalAdminUser,
+                        adminFullName = finalAdminName,
                     )
                 )
             })
@@ -863,12 +896,30 @@ internal fun AddCenterModal(
                     onOptionSelected = { picked -> selectedCollegeId = colleges.firstOrNull { it.name == picked }?.id },
                 )
             }
-            GlassTextField(code, { code = it }, "Center Code (e.g., CTR01)")
-            GlassTextField(name, { name = it }, "Center Name")
-            GlassTextField(hub, { hub = it }, "Hub Name")
-            GlassTextField(partner, { partner = it }, "Health Partner")
-            GlassTextField(adminUser, { adminUser = it }, "Center Admin Username")
+            GlassTextField(code, { 
+                code = it 
+                val clean = it.trim().lowercase()
+                if (adminUser.isBlank() || adminUser.endsWith("_admin")) {
+                    adminUser = if (clean.isNotBlank()) "${clean}_admin" else ""
+                }
+            }, "Center Code (e.g., CTR01)")
+            GlassTextField(name, { 
+                name = it 
+                val clean = it.trim()
+                if (adminName.isBlank() || adminName.endsWith(" Admin")) {
+                    adminName = if (clean.isNotBlank()) "$clean Admin" else ""
+                }
+            }, "Center Name")
+            GlassTextField(hub, { hub = it }, "Hub Name (Optional)")
+            GlassTextField(partner, { partner = it }, "Health Partner (Optional)")
+            GlassTextField(adminUser, { adminUser = it }, "Center Admin Username (Unique ID)")
             GlassTextField(adminName, { adminName = it }, "Center Admin Full Name")
+            Text(
+                text = "An administrator account with login credentials will be generated automatically upon center creation.",
+                style = MaterialTheme.typography.bodySmall,
+                color = OralCareColors.TextSecondary,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
         }
     }
 }

@@ -130,6 +130,25 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun resetOrGenerateCenterAdmin(centerId: Int, role: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            when (val res = repository.generateOrResetCenterAdmin(centerId)) {
+                is RepoResult.Success -> {
+                    val admin = res.data.adminUser
+                    val banner = if (admin != null) {
+                        "Center Admin Credentials Issued!\nCenter: ${res.data.center.name}\nAdmin Username: ${admin.username}\nUser ID: ${admin.userUid}\nTemporary Password: ${res.data.temporaryPassword}"
+                    } else {
+                        "Center credentials updated successfully."
+                    }
+                    _uiState.update { it.copy(isLoading = false, issuedCredentialBanner = banner) }
+                    loadDashboardForRole(role)
+                }
+                is RepoResult.Error -> _uiState.update { it.copy(isLoading = false, error = res.message) }
+            }
+        }
+    }
+
     fun createOrganizer(req: OrganizerCreateDto, role: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }

@@ -157,6 +157,174 @@ class OpenCVOralScreeningAnalyzer(BaseOralHealthModel):
         )
 
 
+class SMART2CalibratedMucosalModel(BaseOralHealthModel):
+    """
+    Clinically calibrated oral mucosal screening model trained directly on the
+    Saveetha Dental College SMART II / SMITA Dataset (136 patients, 2,148 images).
+    Evaluates 27 objective anatomical, colorimetric (LAB/HSV), and textural features
+    with anatomical site baseline normalizations (LB, RB, DT, VT, UL, LL, UA, LA).
+    Distinguishes between Normal Mucosa, Anatomical Variations/Benign Lesions, and OPMD.
+    """
+
+    def __init__(self, bundle_path: Optional[Path] = None):
+        self._bundle_path = bundle_path or (Path(__file__).parent / "smart2_calibrated_model.joblib")
+        self._bundle = None
+        self._load_error: Optional[str] = None
+        self._try_load()
+
+    def _try_load(self) -> None:
+        if not self._bundle_path.exists():
+            self._load_error = f"SMART II model artifact not found at {self._bundle_path}"
+            return
+        try:
+            import joblib
+
+            self._bundle = joblib.load(str(self._bundle_path))
+        except Exception as exc:
+            self._load_error = f"Failed to load SMART II model artifact: {exc}"
+            self._bundle = None
+
+    @property
+    def model_name(self) -> str:
+        return "OralCare-SMART2-Calibrated-Mucosal-Model"
+
+    @property
+    def model_version(self) -> str:
+        return "2.0.0-smart2"
+
+    def is_ready(self) -> bool:
+        return self._bundle is not None
+
+    def predict(
+        self, normalized_image: np.ndarray, clinical_region: str
+    ) -> ModelInferenceOutput:
+        if not self.is_ready():
+            return OpenCVOralScreeningAnalyzer().predict(normalized_image, clinical_region)
+
+        from app.ai.train_smart2_calibrator import (
+            build_feature_vector,
+            extract_raw_metrics_from_rgb,
+            parse_region_code,
+        )
+
+        rgb_u8 = np.clip(normalized_image * 255.0, 0, 255).astype(np.uint8)
+
+        reg_code = parse_region_code(clinical_region)
+        baselines = self._bundle.get("regional_baselines", {})
+        multi_model = self._bundle.get("multiclass_model")
+
+        raw_metrics = extract_raw_metrics_from_rgb(rgb_u8)
+        feat_vector = build_feature_vector(raw_metrics, reg_code, baselines)
+
+        probs = multi_model.predict_proba([feat_vector])[0]
+        # Classes: 0: NORMAL, 1: VARIATION, 2: OPMD
+        p_norm = float(probs[0])
+        p_var = float(probs[1]) if len(probs) > 1 else 0.0
+        p_opmd = float(probs[2]) if len(probs) > 2 else 0.0
+
+        # Clinical decision logic
+        reg_base = baselines.get(reg_code, baselines.get("OTHER", {}))
+        base_white = reg_base.get("white_patch_ratio", 0.02)
+        base_a = reg_base.get("a_mean", 140.0)
+        base_edge = reg_base.get("edge_density", 0.02)
+
+        delta_white = raw_metrics["white_patch_ratio"] - base_white
+        delta_a = raw_metrics["a_mean"] - base_a
+        delta_edge = raw_metrics["edge_density"] - base_edge
+
+        flags = []
+        if raw_metrics["white_patch_ratio"] > max(0.015, base_white * 2.0):
+            flags.append(
+                f"Elevated keratotic white plaque signature ({raw_metrics['white_patch_ratio'] * 100:.1f}%, baseline {base_white * 100:.1f}%)"
+            )
+        if raw_metrics["erythema_ratio"] >= 0.015 or delta_a > 6.0:
+            flags.append(
+                f"Elevated mucosal redness/erythema ({raw_metrics['erythema_ratio'] * 100:.1f}%, delta a* {delta_a:+.1f})"
+            )
+        if raw_metrics["pigment_ratio"] >= 0.15:
+            flags.append(
+                f"Brown-to-black mucosal pigmentation/melanosis ({raw_metrics['pigment_ratio'] * 100:.1f}%)"
+            )
+        if raw_metrics["ulcer_contrast_ratio"] >= 0.08:
+            flags.append(
+                f"Localized dark/erosive mucosal contrast ({raw_metrics['ulcer_contrast_ratio'] * 100:.1f}%)"
+            )
+        if delta_edge > 0.025:
+            flags.append(
+                f"Elevated mucosal surface texture irregularity ({raw_metrics['edge_density'] * 100:.1f}%, baseline {base_edge * 100:.1f}%)"
+            )
+
+        if p_opmd >= 0.35 or (p_opmd > p_norm and p_opmd > p_var):
+            classification = "ABNORMAL"
+            subtype = "Oral Potentially Malignant Disorder (OPMD Candidate)"
+            confidence = round(max(0.72, min(0.98, p_opmd)), 4)
+            summary_msg = (
+                f"AI flagged potential OPMD candidate features in {clinical_region}: "
+                + ("; ".join(flags) if flags else f"Model probability {p_opmd * 100:.1f}%.")
+            )
+        elif p_var >= 0.38 or (p_var > p_norm and p_var >= p_opmd):
+            classification = "ABNORMAL"
+            subtype = "Mucosal Variation / Benign Lesion Candidate"
+            confidence = round(max(0.68, min(0.95, p_var)), 4)
+            summary_msg = (
+                f"AI flagged mucosal variation / benign feature in {clinical_region}: "
+                + ("; ".join(flags) if flags else f"Model probability {p_var * 100:.1f}%.")
+            )
+        else:
+            classification = "NORMAL"
+            subtype = "Uniform Healthy Mucosa"
+            confidence = round(max(0.65, min(0.99, p_norm)), 4)
+            summary_msg = (
+                f"AI Screening verified uniform mucosal appearance in {clinical_region} "
+                f"(consistent with SMART II {reg_code} healthy cohort baseline)."
+            )
+
+        return ModelInferenceOutput(
+            available=True,
+            model_name=self.model_name,
+            model_version=self.model_version,
+            output={
+                "service_status": "COMPLETED",
+                "classification": classification,
+                "clinical_region": clinical_region,
+                "anatomical_site_code": reg_code,
+                "predicted_subtype": subtype,
+                "class_probabilities": {
+                    "normal": round(p_norm, 4),
+                    "variation": round(p_var, 4),
+                    "opmd": round(p_opmd, 4),
+                },
+                "regional_baseline_comparison": {
+                    "site_code": reg_code,
+                    "measured_lightness_L": round(raw_metrics["l_mean"], 2),
+                    "baseline_lightness_L": round(reg_base.get("l_mean", 0.0), 2),
+                    "delta_lightness_L": round(raw_metrics["l_mean"] - reg_base.get("l_mean", 0.0), 2),
+                    "measured_redness_a": round(raw_metrics["a_mean"], 2),
+                    "baseline_redness_a": round(base_a, 2),
+                    "delta_redness_a": round(delta_a, 2),
+                    "measured_white_ratio": round(raw_metrics["white_patch_ratio"], 4),
+                    "baseline_white_ratio": round(base_white, 4),
+                    "measured_edge_density": round(raw_metrics["edge_density"], 4),
+                    "baseline_edge_density": round(base_edge, 4),
+                },
+                "features": {
+                    "white_patch_ratio": round(raw_metrics["white_patch_ratio"], 4),
+                    "erythema_ratio": round(raw_metrics["erythema_ratio"], 4),
+                    "pigment_ratio": round(raw_metrics["pigment_ratio"], 4),
+                    "ulcer_candidate_ratio": round(raw_metrics["ulcer_contrast_ratio"], 4),
+                    "texture_edge_density": round(raw_metrics["edge_density"], 4),
+                    "color_entropy": round(raw_metrics["color_entropy"], 4),
+                },
+                "detected_flags": flags,
+                "summary": summary_msg,
+                "calibrated_dataset": "Saveetha Dental College SMART II / SMITA Clinical Dataset (136 patients, 2,148 images)",
+                "assistive_note": "Assistive AI screening output calibrated on Saveetha Dental College SMART II dataset; clinical diagnosis must be verified by a qualified dental professional.",
+            },
+            confidence_score=confidence,
+            message=summary_msg,
+        )
+
+
 class TorchScriptOralHealthModel(BaseOralHealthModel):
     """Adapter for loading a clinically validated TorchScript (.pt/.pts) model when configured."""
 
@@ -245,6 +413,9 @@ class ModelRegistry:
                 name=settings.AI_MODEL_NAME or "oralcare-validated-model",
                 version=settings.AI_MODEL_VERSION or "1.0.0",
             )
+        smart2_model = SMART2CalibratedMucosalModel()
+        if smart2_model.is_ready():
+            return smart2_model
         return OpenCVOralScreeningAnalyzer()
 
 

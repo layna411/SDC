@@ -612,6 +612,9 @@ class OralCareRepositoryImpl @Inject constructor(
     override suspend fun createCenter(req: CenterCreateDto): RepoResult<CenterCreatedWithAdminDto> =
         safeCall { api.createCenter(req) }
 
+    override suspend fun generateOrResetCenterAdmin(id: Int): RepoResult<CenterCreatedWithAdminDto> =
+        safeCall { api.generateOrResetCenterAdmin(id) }
+
     override suspend fun toggleCenterStatus(id: Int, isActive: Boolean): RepoResult<CenterDto> =
         safeCall { api.toggleCenterStatus(id, isActive) }
 

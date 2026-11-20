@@ -303,6 +303,7 @@ private fun AuthenticatedRoleShell(
                             uiState = dashboardState,
                             onCreateCenter = { dashboardViewModel.createCenter(it, role) },
                             onToggleCenter = { id, active -> dashboardViewModel.toggleCenter(id, active, role) },
+                            onResetAdminCredentials = { id -> dashboardViewModel.resetOrGenerateCenterAdmin(id, role) },
                             onDismissBanner = dashboardViewModel::clearCredentialBanner,
                             onOpenProfile = { overlayRoute = "profile" },
                             onOpenNotifications = { showNotificationsSheet = true },

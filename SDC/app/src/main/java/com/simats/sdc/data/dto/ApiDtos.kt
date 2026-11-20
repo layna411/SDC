@@ -104,6 +104,9 @@ data class CollegeDto(
     @SerializedName("contact_phone") val contactPhone: String? = null,
     @SerializedName("is_active") val isActive: Boolean,
     @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("admin_username") val adminUsername: String? = null,
+    @SerializedName("admin_user_id") val adminUserId: Int? = null,
+    @SerializedName("has_admin") val hasAdmin: Boolean = false,
 )
 
 data class CollegeCreatedWithAdminDto(
@@ -144,6 +147,9 @@ data class CenterDto(
     @SerializedName("contact_phone") val contactPhone: String? = null,
     @SerializedName("is_active") val isActive: Boolean,
     @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("admin_username") val adminUsername: String? = null,
+    @SerializedName("admin_user_id") val adminUserId: Int? = null,
+    @SerializedName("has_admin") val hasAdmin: Boolean = false,
 )
 
 data class CenterCreatedWithAdminDto(

@@ -34,6 +34,7 @@ interface OralCareRepository {
 
     suspend fun listCenters(collegeId: Int? = null): RepoResult<List<CenterDto>>
     suspend fun createCenter(req: CenterCreateDto): RepoResult<CenterCreatedWithAdminDto>
+    suspend fun generateOrResetCenterAdmin(id: Int): RepoResult<CenterCreatedWithAdminDto>
     suspend fun toggleCenterStatus(id: Int, isActive: Boolean): RepoResult<CenterDto>
 
     suspend fun listOrganizers(centerId: Int? = null): RepoResult<List<OrganizerDto>>

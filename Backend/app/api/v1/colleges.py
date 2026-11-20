@@ -50,52 +50,75 @@ def create_college(
     current_user: User = Depends(require_roles(UserRole.SUPER_ADMIN)),
     db: Session = Depends(get_db),
 ):
-    if db.query(College).filter(College.college_code == payload.college_code.strip().upper()).first():
+    clean_code = payload.college_code.strip().upper()
+    if db.query(College).filter(College.college_code == clean_code).first():
         raise HTTPException(status_code=409, detail="College code already exists.")
 
-    college = College(
-        college_code=payload.college_code.strip().upper(),
-        name=payload.name.strip(),
-        address=payload.address,
-        city=payload.city,
-        state=payload.state,
-        pincode=payload.pincode,
-        contact_email=payload.contact_email,
-        contact_phone=payload.contact_phone,
-        is_active=True,
-        created_by_user_id=current_user.id,
-    )
-    db.add(college)
-    db.commit()
-    db.refresh(college)
+    target_admin_username = None
+    if payload.create_admin_account or payload.admin_username:
+        raw_user = payload.admin_username.strip() if payload.admin_username else f"{clean_code.lower()}_admin"
+        if db.query(User).filter(User.username == raw_user).first():
+            if payload.admin_username:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Admin username '{raw_user}' is already taken. Please choose a different username.",
+                )
+            suffix = 1
+            while db.query(User).filter(User.username == f"{raw_user}_{suffix}").first():
+                suffix += 1
+            raw_user = f"{raw_user}_{suffix}"
+        target_admin_username = raw_user
 
-    log_activity(
-        db,
-        action="COLLEGE_CREATED",
-        entity_type="COLLEGE",
-        entity_id=str(college.id),
-        user=current_user,
-        college_id=college.id,
-        ip_address=get_client_ip(request),
-        details={"college_code": college.college_code},
-    )
+    try:
+        college = College(
+            college_code=clean_code,
+            name=payload.name.strip(),
+            address=payload.address,
+            city=payload.city,
+            state=payload.state,
+            pincode=payload.pincode,
+            contact_email=payload.contact_email,
+            contact_phone=payload.contact_phone,
+            is_active=True,
+            created_by_user_id=current_user.id,
+        )
+        db.add(college)
+        db.flush()
 
-    admin_user = None
-    temp_password = None
-    if payload.create_admin_account:
-        if not payload.admin_username:
-            raise HTTPException(status_code=400, detail="admin_username is required when creating admin account.")
-        admin_user, temp_password = create_hierarchical_user(
+        admin_user = None
+        temp_password = None
+        if target_admin_username:
+            admin_user, temp_password = create_hierarchical_user(
+                db,
+                actor=current_user,
+                username=target_admin_username,
+                full_name=payload.admin_full_name or f"{college.name} Admin",
+                role=UserRole.COLLEGE_ADMIN,
+                email=payload.admin_email or payload.contact_email,
+                phone=payload.admin_phone or payload.contact_phone,
+                college_id=college.id,
+                ip_address=get_client_ip(request),
+            )
+
+        log_activity(
             db,
-            actor=current_user,
-            username=payload.admin_username,
-            full_name=payload.admin_full_name or f"{college.name} Admin",
-            role=UserRole.COLLEGE_ADMIN,
-            email=payload.admin_email or payload.contact_email,
-            phone=payload.admin_phone or payload.contact_phone,
+            action="COLLEGE_CREATED",
+            entity_type="COLLEGE",
+            entity_id=str(college.id),
+            user=current_user,
             college_id=college.id,
             ip_address=get_client_ip(request),
+            details={"college_code": college.college_code},
         )
+
+        db.commit()
+        db.refresh(college)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create college: {exc}")
 
     return CollegeCreateWithAdminResponse(
         college=CollegeResponse.model_validate(college),
