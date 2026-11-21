@@ -202,7 +202,7 @@ fun ScreeningWizardScreen(
                 )
                 .clip(bottomBarShape)
                 .background(OralCareColors.HeaderGradient, bottomBarShape)
-                .border(BorderStroke(1.dp, Color(0xFFC0DEF8)), bottomBarShape),
+                .border(BorderStroke(1.dp, OralCareColors.PastelBlue), bottomBarShape),
         ) {
             Row(
                 modifier = Modifier

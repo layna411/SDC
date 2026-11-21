@@ -176,7 +176,7 @@ fun AnatomicalReferenceDiagram(
                     .height(220.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(Color(0xFF0F1E2E))
-                    .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(14.dp))
+                    .border(1.dp, OralCareColors.PastelBlue, RoundedCornerShape(14.dp))
                     .clickable { showZoomDialog = true },
                 contentAlignment = Alignment.Center,
             ) {
@@ -261,7 +261,7 @@ fun AnatomicalReferenceDiagram(
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .clip(RoundedCornerShape(20.dp))
-                    .border(1.5.dp, Color(0xFFC0DEF8), RoundedCornerShape(20.dp)),
+                    .border(1.5.dp, OralCareColors.PastelBlue, RoundedCornerShape(20.dp)),
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),

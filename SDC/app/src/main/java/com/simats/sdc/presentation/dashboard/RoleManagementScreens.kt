@@ -632,7 +632,7 @@ fun UsersDirectoryScreen(
                     border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = roleFilter == null,
-                        borderColor = Color(0xFFCBE3F7),
+                        borderColor = OralCareColors.PastelBlue,
                         selectedBorderColor = OralCareColors.AccentBlueStrong,
                         borderWidth = 0.75.dp,
                         selectedBorderWidth = 1.25.dp,
@@ -646,7 +646,7 @@ fun UsersDirectoryScreen(
                     border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = roleFilter == "COLLEGE_ADMIN",
-                        borderColor = Color(0xFFCBE3F7),
+                        borderColor = OralCareColors.PastelBlue,
                         selectedBorderColor = OralCareColors.AccentBlueStrong,
                         borderWidth = 0.75.dp,
                         selectedBorderWidth = 1.25.dp,
@@ -660,7 +660,7 @@ fun UsersDirectoryScreen(
                     border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = roleFilter == "CENTER_ADMIN",
-                        borderColor = Color(0xFFCBE3F7),
+                        borderColor = OralCareColors.PastelBlue,
                         selectedBorderColor = OralCareColors.AccentBlueStrong,
                         borderWidth = 0.75.dp,
                         selectedBorderWidth = 1.25.dp,
@@ -674,7 +674,7 @@ fun UsersDirectoryScreen(
                     border = FilterChipDefaults.filterChipBorder(
                         enabled = true,
                         selected = roleFilter == "HEALTH_ORGANIZER",
-                        borderColor = Color(0xFFCBE3F7),
+                        borderColor = OralCareColors.PastelBlue,
                         selectedBorderColor = OralCareColors.AccentBlueStrong,
                         borderWidth = 0.75.dp,
                         selectedBorderWidth = 1.25.dp,
@@ -1386,8 +1386,8 @@ private fun ActivityHistoryList(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF3F8FD))
-            .border(BorderStroke(0.75.dp, Color(0xFFD6E8F7)), RoundedCornerShape(12.dp))
+            .background(OralCareColors.SecondaryBackground)
+            .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(12.dp))
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -1463,7 +1463,7 @@ private fun ActivityHistoryList(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color.White)
-                            .border(BorderStroke(0.5.dp, Color(0xFFE2EDF7)), RoundedCornerShape(8.dp))
+                            .border(BorderStroke(0.5.dp, OralCareColors.PastelBlue), RoundedCornerShape(8.dp))
                             .padding(8.dp),
                     ) {
                         Row(
@@ -1577,7 +1577,7 @@ fun CollegeDetailModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFEBF5FF))
+                    .background(OralCareColors.LightBlue)
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1624,8 +1624,8 @@ fun CollegeDetailModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF7FAFD))
-                    .border(BorderStroke(0.75.dp, Color(0xFFE2EDF7)), RoundedCornerShape(12.dp))
+                    .background(OralCareColors.SecondaryBackground)
+                    .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(12.dp))
                     .padding(12.dp),
             ) {
                 DetailRow("Location", listOfNotNull(college.city, college.state).joinToString(", ").ifBlank { "Not set" }, Icons.Default.LocationOn)
@@ -1642,8 +1642,8 @@ fun CollegeDetailModal(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF3F8FD))
-                        .border(BorderStroke(0.75.dp, Color(0xFFD6E8F7)), RoundedCornerShape(12.dp))
+                        .background(OralCareColors.SecondaryBackground)
+                        .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(12.dp))
                         .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -1722,7 +1722,7 @@ fun CenterDetailModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFEBF5FF))
+                    .background(OralCareColors.LightBlue)
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1769,8 +1769,8 @@ fun CenterDetailModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF7FAFD))
-                    .border(BorderStroke(0.75.dp, Color(0xFFE2EDF7)), RoundedCornerShape(12.dp))
+                    .background(OralCareColors.SecondaryBackground)
+                    .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(12.dp))
                     .padding(12.dp),
             ) {
                 DetailRow("Hub Name", center.hubName ?: "General", Icons.Default.Business)
@@ -1788,8 +1788,8 @@ fun CenterDetailModal(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF3F8FD))
-                        .border(BorderStroke(0.75.dp, Color(0xFFD6E8F7)), RoundedCornerShape(12.dp))
+                        .background(OralCareColors.SecondaryBackground)
+                        .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(12.dp))
                         .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -1872,7 +1872,7 @@ fun UserDetailModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFEBF5FF))
+                    .background(OralCareColors.LightBlue)
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1929,8 +1929,8 @@ fun UserDetailModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF7FAFD))
-                    .border(BorderStroke(0.75.dp, Color(0xFFE2EDF7)), RoundedCornerShape(12.dp))
+                    .background(OralCareColors.SecondaryBackground)
+                    .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(12.dp))
                     .padding(12.dp),
             ) {
                 DetailRow("Username", "@${user.username}", Icons.Default.AccountCircle)
@@ -2121,8 +2121,8 @@ private fun CredentialCopyBox(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFFF7FAFD))
-            .border(BorderStroke(0.75.dp, Color(0xFFDCEAF7)), RoundedCornerShape(10.dp))
+            .background(OralCareColors.SecondaryBackground)
+            .border(BorderStroke(0.75.dp, OralCareColors.PastelBlue), RoundedCornerShape(10.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = OralCareColors.TextSecondary)

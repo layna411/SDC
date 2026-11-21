@@ -90,13 +90,7 @@ fun GlassBackground(
                 if (isDark) {
                     Brush.verticalGradient(listOf(OralCareColors.DarkBackground, OralCareColors.DarkSurface))
                 } else {
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFFF4F9FF),
-                            Color(0xFFE9F3FC),
-                            Color(0xFFF2F8FF),
-                        )
-                    )
+                    OralCareColors.BackgroundGradient
                 }
             ),
     ) {
@@ -186,8 +180,8 @@ fun GlassCard(
 
     val resolvedBorder = borderColor ?: when {
         isDark -> OralCareColors.DarkBorder
-        highlighted -> Color(0xFF98CBF7)
-        else -> Color(0xFFC0DEF8)
+        highlighted -> OralCareColors.SoftSage
+        else -> OralCareColors.PastelSage
     }
 
     val baseModifier = modifier
@@ -239,7 +233,7 @@ fun GlassButton(
     val isDark = MaterialTheme.colorScheme.background == OralCareColors.DarkBackground
 
     val bgBrush = when {
-        !enabled -> Brush.horizontalGradient(listOf(Color(0xFFE8F1F9), Color(0xFFE2EEF8)))
+        !enabled -> Brush.horizontalGradient(listOf(Color(0xFFE8F2EE), Color(0xFFE2EDE7)))
         isPrimary -> OralCareColors.PrimaryButtonGradient
         isDark -> Brush.verticalGradient(listOf(OralCareColors.DarkCard, OralCareColors.DarkSurface))
         else -> OralCareColors.SecondaryButtonGradient
@@ -253,10 +247,10 @@ fun GlassButton(
     }
 
     val borderStroke = when {
-        !enabled -> BorderStroke(1.dp, Color(0xFFD2E4F4))
+        !enabled -> BorderStroke(1.dp, Color(0xFFD2E8DF))
         isPrimary -> BorderStroke(1.dp, Color.White.copy(alpha = 0.28f))
         isDark -> BorderStroke(1.dp, OralCareColors.DarkBorder)
-        else -> BorderStroke(1.2.dp, Color(0xFF90C5F2))
+        else -> BorderStroke(1.2.dp, OralCareColors.SoftSage)
     }
 
     Box(
@@ -392,9 +386,9 @@ fun GlassTextField(
             shape = OralCareTokens.InputShape,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = OralCareColors.AccentBlueStrong,
-                unfocusedBorderColor = if (isDark) OralCareColors.DarkBorder else Color(0xFFC5E0F7),
+                unfocusedBorderColor = if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelSage,
                 focusedContainerColor = if (isDark) OralCareColors.DarkSurface else Color.White,
-                unfocusedContainerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.85f) else Color(0xFFFAFDFF),
+                unfocusedContainerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.85f) else Color(0xFFFAFCFA),
                 focusedLabelColor = OralCareColors.AccentBlueStrong,
                 unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -453,9 +447,9 @@ fun GlassDropdown(
             shape = OralCareTokens.InputShape,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = OralCareColors.AccentBlueStrong,
-                unfocusedBorderColor = if (isDark) OralCareColors.DarkBorder else Color(0xFFC5E0F7),
+                unfocusedBorderColor = if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelSage,
                 focusedContainerColor = if (isDark) OralCareColors.DarkSurface else Color.White,
-                unfocusedContainerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.85f) else Color(0xFFFAFDFF),
+                unfocusedContainerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.85f) else Color(0xFFFAFCFA),
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -508,9 +502,9 @@ fun GlassSearchBar(
         shape = RoundedCornerShape(24.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = OralCareColors.AccentBlueStrong,
-            unfocusedBorderColor = if (isDark) OralCareColors.DarkBorder else Color(0xFFCDE4F8),
+            unfocusedBorderColor = if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelSage,
             focusedContainerColor = if (isDark) OralCareColors.DarkSurface else Color.White,
-            unfocusedContainerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.88f) else Color(0xFFFAFDFF),
+            unfocusedContainerColor = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.88f) else Color(0xFFFAFCFA),
         ),
         modifier = modifier.fillMaxWidth(),
     )
@@ -548,7 +542,7 @@ fun GlassHeader(
                 else OralCareColors.HeaderGradient,
                 shape,
             )
-            .border(BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else Color(0xFFC0DEF8)), shape),
+            .border(BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelSage), shape),
     ) {
         Row(
             modifier = Modifier
@@ -674,7 +668,7 @@ fun GlassBottomNavigation(
             .border(
                 BorderStroke(
                     width = 0.75.dp,
-                    color = if (isDark) OralCareColors.DarkBorder else Color(0xFFE4EFF8),
+                    color = if (isDark) OralCareColors.DarkBorder else OralCareColors.LightSage,
                 ),
                 shape = navShape,
             ),
@@ -855,8 +849,8 @@ private fun RowScope.JellyNavItem(
                             } else {
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color(0xFFBAE0FE).copy(alpha = 0.85f * bubbleAlpha.value),
-                                        Color(0xFFD6EDFF).copy(alpha = 0.60f * bubbleAlpha.value),
+                                        Color(0xFFBCE8DA).copy(alpha = 0.85f * bubbleAlpha.value),
+                                        Color(0xFFD7F5EB).copy(alpha = 0.60f * bubbleAlpha.value),
                                     )
                                 )
                             }
@@ -1072,7 +1066,7 @@ fun GlassImageCard(
             .fillMaxWidth()
             .clip(OralCareTokens.CardShape)
             .background(OralCareColors.CardSurfaceGradient, OralCareTokens.CardShape)
-            .border(1.dp, Color(0xFFC0DEF8), OralCareTokens.CardShape),
+            .border(1.dp, OralCareColors.PastelSage, OralCareTokens.CardShape),
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
             drawRoundRect(

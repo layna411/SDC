@@ -661,7 +661,7 @@ private fun ReexaminationDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFFF2F7FC),
+            color = OralCareColors.PrimaryBackground,
         ) {
             if (successResult != null) {
                 // Success Assessment Card
@@ -672,7 +672,7 @@ private fun ReexaminationDialog(
                     Surface(
                         shape = RoundedCornerShape(22.dp),
                         color = Color.White,
-                        border = BorderStroke(1.2.dp, Color(0xFFC0DEF8)),
+                        border = BorderStroke(1.2.dp, OralCareColors.PastelBlue),
                         shadowElevation = 8.dp,
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)),
                     ) {
@@ -767,7 +767,7 @@ private fun ReexaminationDialog(
                     ) {
                         // Guide banner
                         GlassCard(
-                            borderColor = Color(0xFFC0DEF8),
+                            borderColor = OralCareColors.PastelBlue,
                             contentPadding = PaddingValues(14.dp),
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -819,7 +819,7 @@ private fun ReexaminationDialog(
                                         .height(6.dp)
                                         .clip(RoundedCornerShape(3.dp)),
                                     color = OralCareColors.AccentBlueStrong,
-                                    trackColor = Color(0xFFD6E8FA),
+                                    trackColor = OralCareColors.LightSage,
                                 )
                             }
                         }
@@ -885,7 +885,7 @@ private fun ReexaminationDialog(
                             val isCaptured = captured != null
 
                             GlassCard(
-                                borderColor = if (isCaptured) OralCareColors.NormalGreen.copy(alpha = 0.45f) else Color(0xFFC0DEF8),
+                                borderColor = if (isCaptured) OralCareColors.NormalGreen.copy(alpha = 0.45f) else OralCareColors.PastelBlue,
                                 contentPadding = PaddingValues(12.dp),
                             ) {
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -900,7 +900,7 @@ private fun ReexaminationDialog(
                                                 .size(54.dp)
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(Color(0xFF0F1E2E))
-                                                .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(8.dp)),
+                                                .border(1.dp, OralCareColors.PastelBlue, RoundedCornerShape(8.dp)),
                                             contentAlignment = Alignment.Center,
                                         ) {
                                             Image(
@@ -1043,7 +1043,7 @@ private fun ReexaminationDialog(
                     Surface(
                         color = Color.White.copy(alpha = 0.95f),
                         shadowElevation = 10.dp,
-                        border = BorderStroke(1.dp, Color(0xFFE4EFF8)),
+                        border = BorderStroke(1.dp, OralCareColors.LightSage),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(
@@ -1122,7 +1122,7 @@ private fun ReexaminationDialog(
             Surface(
                 shape = RoundedCornerShape(22.dp),
                 color = Color.White,
-                border = BorderStroke(1.5.dp, Color(0xFFC0DEF8)),
+                border = BorderStroke(1.5.dp, OralCareColors.PastelBlue),
                 shadowElevation = 8.dp,
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
@@ -1172,7 +1172,7 @@ private fun ReexaminationDialog(
                             .height(150.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF0F1E2E))
-                            .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(12.dp)),
+                            .border(1.dp, OralCareColors.PastelBlue, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Image(

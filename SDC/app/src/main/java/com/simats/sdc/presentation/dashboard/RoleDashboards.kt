@@ -124,7 +124,7 @@ fun HealthOrganizerHomeScreen(
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     GlassStatCard("Male Patients", stats.malePatients.toString(), Icons.Default.Male, Modifier.weight(1f), OralCareColors.AccentBlue)
-                    GlassStatCard("Female Patients", stats.femalePatients.toString(), Icons.Default.Female, Modifier.weight(1f), Color(0xFF4A9AD4))
+                    GlassStatCard("Female Patients", stats.femalePatients.toString(), Icons.Default.Female, Modifier.weight(1f), OralCareColors.BrandTealLight)
                 }
                 Spacer(Modifier.height(12.dp))
                 GlassStatCard(

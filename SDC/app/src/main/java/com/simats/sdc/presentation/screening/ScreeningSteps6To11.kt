@@ -104,7 +104,7 @@ fun Step6ClinicalFindings(
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = OralCareColors.LightBlue,
-                border = BorderStroke(1.dp, Color(0xFFC0DEF8)),
+                border = BorderStroke(1.dp, OralCareColors.PastelBlue),
             ) {
                 Text(
                     text = "${selectedRegionIdx + 1} of ${ClinicalConstants.ANATOMICAL_REGIONS.size}",
@@ -518,7 +518,7 @@ fun Step10ImageUploadAndAi(
 
         // Progress Card
         GlassCard(
-            borderColor = if (allCompleted) OralCareColors.NormalGreen.copy(alpha = 0.4f) else Color(0xFFC0DEF8),
+            borderColor = if (allCompleted) OralCareColors.NormalGreen.copy(alpha = 0.4f) else OralCareColors.PastelBlue,
             contentPadding = PaddingValues(16.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -667,7 +667,7 @@ fun Step10ImageUploadAndAi(
             val isCaptured = captured != null
 
             GlassCard(
-                borderColor = if (isCaptured) OralCareColors.NormalGreen.copy(alpha = 0.45f) else Color(0xFFC0DEF8),
+                borderColor = if (isCaptured) OralCareColors.NormalGreen.copy(alpha = 0.45f) else OralCareColors.PastelBlue,
                 contentPadding = PaddingValues(12.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -682,7 +682,7 @@ fun Step10ImageUploadAndAi(
                                 .size(64.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFF0F1E2E))
-                                .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(10.dp))
+                                .border(1.dp, OralCareColors.PastelBlue, RoundedCornerShape(10.dp))
                                 .clickable {
                                     previewImageDetails = "Reference: ${spec.name}" to spec.drawableRes
                                 },
@@ -877,7 +877,7 @@ fun Step10ImageUploadAndAi(
             Surface(
                 shape = RoundedCornerShape(22.dp),
                 color = Color.White,
-                border = BorderStroke(1.5.dp, Color(0xFFC0DEF8)),
+                border = BorderStroke(1.5.dp, OralCareColors.PastelBlue),
                 shadowElevation = 8.dp,
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
@@ -929,7 +929,7 @@ fun Step10ImageUploadAndAi(
                             .height(160.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF0F1E2E))
-                            .border(1.dp, Color(0xFFC0DEF8), RoundedCornerShape(12.dp)),
+                            .border(1.dp, OralCareColors.PastelBlue, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Image(
@@ -1013,7 +1013,7 @@ fun Step10ImageUploadAndAi(
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .clip(RoundedCornerShape(20.dp))
-                    .border(1.5.dp, Color(0xFFC0DEF8), RoundedCornerShape(20.dp)),
+                    .border(1.5.dp, OralCareColors.PastelBlue, RoundedCornerShape(20.dp)),
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),

@@ -405,7 +405,7 @@ fun FeedbackScreen(
                                 Surface(
                                     shape = RoundedCornerShape(10.dp),
                                     color = if (isDark) OralCareColors.DarkSurface.copy(alpha = 0.5f) else OralCareColors.LightBlue.copy(alpha = 0.35f),
-                                    border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else Color(0xFFCCE4FF)),
+                                    border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelBlue),
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
                                     Text(
@@ -469,7 +469,7 @@ fun FeedbackScreen(
                                                     },
                                                     shape = RoundedCornerShape(6.dp),
                                                     color = if (isDark) OralCareColors.DarkCard else OralCareColors.LightBlue,
-                                                    border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else Color(0xFFB9D7F9)),
+                                                    border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelBlue),
                                                 ) {
                                                     Row(
                                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -667,7 +667,7 @@ fun FeedbackScreen(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = if (isDark) OralCareColors.DarkSurface else OralCareColors.LightBlue.copy(alpha = 0.5f),
-                    border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else Color(0xFFCBE3FB)),
+                    border = BorderStroke(1.dp, if (isDark) OralCareColors.DarkBorder else OralCareColors.PastelBlue),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
